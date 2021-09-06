@@ -44,7 +44,7 @@
 1. Create a bridge network
 `sudo docker network create --driver bridge hw03`
 
-2. MQTT broker
+2. Cloud MQTT broker
 
     * Build the image
 
@@ -54,7 +54,7 @@
 
         `sudo docker run --rm --name cloud_mqtt_broker --network hw03 -p 1883:1883 -ti cloud_mqtt_broker /usr/sbin/mosquitto`
 
-3. MQTT receiver
+3. Cloud MQTT Prcessoor
 
     * Build the image
 
@@ -64,7 +64,7 @@
 
     * Spin up container and run `cloud_procssor.py`
 
-        `sudo docker run --rm --name cloud_processor --network hw03 -v ~/W251/HW/hw03/:/home/ -ti cloud_processor /bin/bash /home/cloud_prcessor.sh`
+        `sudo docker run --rm --name cloud_processor --network hw03 -v $PWD/:/home/ -ti cloud_processor /bin/bash /home/cloud_prcessor.sh`
 
 4.  S3 buckets
 
@@ -76,7 +76,7 @@
 
 1. The repo for the code can be found at `https://github.com/MadhuAtBerkeley/W251/v3/tree/master/week03/hw`, please let me know if there is any trouble accessing it.
 
-2. The link to the faces can be found at 
+2. The link to the faces can be found at https://w251-s3-bucket.s3.us-west-2.amazonaws.com/face.jpg
 
 3. Naming of the MQTT topics: I created a simple single-level topic for the MQTT topic .
 
