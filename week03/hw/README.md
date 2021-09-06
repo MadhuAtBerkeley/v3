@@ -66,9 +66,11 @@
 
         `sudo docker run --rm --name cloud_processor --network hw03 -v ~/W251/HW/hw03/:/home/ -ti cloud_processor /bin/bash /home/cloud_prcessor.sh`
 
-4. Note on S3 buckets
+4.  S3 buckets
 
-    The newer version of S3 buckets support public access much easier. `s3cmd` still works with the newer buckets, but one needs to create new credential with HMAC checked to see the access_key and secret_access_key.
+    The S3 bucket w251-s3-bucket was created on AWS using my access_key and secret_access_key. The S3 bucket was mounted in the Ubuntu EC2 using the command below.
+    
+    'sudo s3fs w251-s3-bucket /home/ubuntu/work/v3/week03/hw/s3fs/hw3_data -o passwd_file=${HOME}/.passwd-s3fs,nonempty,rw,allow_other,,mp_umask=0007,uid=1000,gid=1000' 
 
 ## Submission
 
