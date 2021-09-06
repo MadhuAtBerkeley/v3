@@ -1,0 +1,18 @@
+FROM ubuntu
+
+# build this: e.g docker build -t motion -f Dockerfile.opencv-mqtt
+# to run this container, do:
+# on the host:
+# make sure you're in the X environment
+# xhost + 
+# docker run --rm --privileged -e DISPLAY -v /tmp:/tmp -ti motion bash
+# docker run --rm --privileged -e DISPLAY -n face_detector -v ~/Documents/W251/v2/week03/hw_mz/:/home/ -ti motion bash
+
+RUN apt update
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get install -y python3-opencv python3-pip vim-tiny mosquitto-clients libopencv-dev
+RUN pip3 install paho-mqtt
+
+WORKDIR /
