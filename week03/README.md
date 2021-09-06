@@ -1,55 +1,81 @@
-# Lecture 3
-Virtual machines, containers, orchestration and Kubernetes, edge, and cloud native.
+# Homework 3
 
-## Reading
+## On Jetson NX
 
-### Virtual Machines
+1. Create a bridge network
+`docker network create --driver bridge hw03`
 
-https://www.ibm.com/cloud/learn/hypervisors
+2. MQTT broker
 
-https://www.stratoscale.com/blog/hyperconvergence/cloud-101-what-is-a-hypervisor/
+    * Build the image
 
-https://www.redhat.com/en/topics/virtualization/what-is-KVM
+        `sudo docker build -t nx_mqtt_broker -f dockerfile_mqtt_broker .`
 
+    * Spin up container and establish broker
 
-### Containers
+        `sudo docker run --rm --name nx_mqtt_broker --network hw03 -p 1883:1883 -ti mqtt_broker /usr/sbin/mosquitto`
 
-https://avatao.com/life-before-docker-and-beyond-a-brief-history-of-container-security/
+3. MQTT forwarder
 
-https://docs.docker.com/get-started/overview/
+    This spins up the forwarder that connects with both broker, so make sure the broker is up on VSI as well (see below).
 
-https://mkdev.me/en/posts/the-tool-that-really-runs-your-containers-deep-dive-into-runc-and-oci-specifications
+    * Build the image
 
-https://www.docker.com/blog/what-is-containerd-runtime/
+        `sudo docker build -t nx_mqtt_forwarder -f dockerfile_mqtt_forwarder .`
 
+    * Spin up container and run `nx_forwarder.py`
 
-### Installing Docker
+        `sudo docker run --rm --name nx_mqtt_forwarder --network hw03 -v ~/work/W251/v3/week03/hw/:/home/ -ti nx_mqtt_forwarder /bin/sh /home/nx_forwarder.sh`
 
-https://docs.docker.com/get-docker/ 
+4. OpenCV face detector
 
+    * Build the image
 
-### Kubernetes
+        `sudo docker build -t nx_face_detector -f dockerfile_face_detector .`
 
-https://kubernetes.io/docs/concepts/
+    * Spin up the container and run `nx_face_detector.py`
 
-https://kubernetes.io/docs/tutorials/kubernetes-basics/
+        `sudo docker run --rm --privileged -e DISPLAY --name nx_face_detector --network hw03 -v ~/work/W251/v3/week03/hw/:/home/ -ti nx_face_detector /bin/bash /home/nx_face_detector.sh`
 
-https://rancher.com/docs/k3s/latest/en/architecture/
+    * Note that in `nx_face_detector.py` I added in a timeout of 5 seconds as well as a single digit counter to keep track of faces/pictures. These were used just so that I don't overwhelm the output with tons of images. Tests have been done with these two restrictions removed and it still works nicely. 
 
-https://thenewstack.io/how-k3s-portworx-and-calico-can-serve-as-a-foundation-of-cloud-native-edge-infrastructure/
+## On AWS
 
-### Miscellaneous
+1. Create a bridge network
+`sudo docker network create --driver bridge hw03`
 
-https://docs.microsoft.com/en-us/dotnet/architecture/cloud-native/definition
+2. MQTT broker
 
-https://blogs.nvidia.com/blog/2019/10/22/what-is-edge-computing/
+    * Build the image
 
-https://developer.nvidia.com/blog/deploying-ai-apps-with-egx-on-jetson-xavier-nx-microservers/
+        `sudo docker build -t cloud_mqtt_broker -f dockerfile_cloud_broker .`
 
-https://blogs.nvidia.com/blog/2020/10/08/retailers-edge-computing-ai/
+    * Spin up container and establish broker
 
-https://kubernetes.io/blog/2018/05/22/getting-to-know-kubevirt/ 
+        `sudo docker run --rm --name cloud_mqtt_broker --network hw03 -p 1883:1883 -ti cloud_mqtt_broker /usr/sbin/mosquitto`
 
-https://elinux.org/Jetson_Zoo
+3. MQTT receiver
 
+    * Build the image
 
+        Unfortunately, I didn't find a way to decode the bytes message without openCV, so this receiver image is the same with the image for face detector, except that I also needed to add `s3cmd`. It is bigger than I idealy wanted, but it works for now.
+
+        `sudo docker build -t cluod_prcessor -f dockerfile_cloud_processor .`
+
+    * Spin up container and run `cloud_procssor.py`
+
+        `sudo docker run --rm --name cloud_processor --network hw03 -v ~/W251/HW/hw03/:/home/ -ti cloud_processor /bin/bash /home/cloud_prcessor.sh`
+
+4. Note on S3 buckets
+
+    The newer version of S3 buckets support public access much easier. `s3cmd` still works with the newer buckets, but one needs to create new credential with HMAC checked to see the access_key and secret_access_key.
+
+## Submission
+
+1. The repo for the code can be found at `https://github.com/MadhuAtBerkeley/W251/v3/tree/master/week03/hw`, please let me know if there is any trouble accessing it.
+
+2. The link to the faces can be found at 
+
+3. Naming of the MQTT topics: I created a simple single-level topic for the MQTT topic .
+
+4. Choice of QoS: I picked QoS 0 for this task, which is also commonly known as "fire and forgot". 
