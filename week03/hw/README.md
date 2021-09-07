@@ -80,4 +80,5 @@
 
 3. Naming of the MQTT topics: I created a two level topic for the MQTT brokers. I defined an use case for this project - detecting prisoners at a door location loc_0 and the edge sends images with prisoner faces to MQTT forwarder for prison building location area_1 (geographic area). Then the forwarder send the prisoner images to the cloud.  The topic used for local broker within the prison(from door 0) is `loc_0/face_detect` and topic used for forwarding the images to the cloud (from prison location area_1) is `area_1/face_detect`
 
-4. Choice of QoS: I picked QoS 0 for this task, which is also commonly known as "fire and forgot". 
+4. Choice of QoS: I picked QoS 1 for this task, which guarentees the delivery of images. The duplicates are fine in this case but need to guaranteee that every prisoner is accounted for. The QoS 1 does not have the overhead of QoS 2 and QoS 1 delivers the message much faster than QoS 2. The QoS 0 is not chosen as we might miss faces of prisoners and we would not know if they escaped or messages got lost.
+
