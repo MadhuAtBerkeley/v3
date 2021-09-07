@@ -25,7 +25,7 @@
 
     * Spin up container and run `nx_forwarder.py`
 
-        `sudo docker run --rm --name nx_mqtt_forwarder --network hw03 -v ~/work/W251/v3/week03/hw/:/home/ -ti nx_mqtt_forwarder /bin/sh /home/nx_forwarder.sh`
+        `sudo docker run --rm --name nx_mqtt_forwarder --network hw03 -v ~/work/W251/v3/week03/hw/:/home/ -ti nx_mqtt_forwarder /bin/sh /home/mqtt_forwarder.sh`
 
 4. OpenCV face detector
 
