@@ -63,7 +63,7 @@ while(True):
             # forward to mqtt broker on jetson
             print("publishing message")
          
-            local_mqttclient.publish(LOCAL_MQTT_TOPIC, payload=jpg_msg, qos=0, retain=False)
+            local_mqttclient.publish(LOCAL_MQTT_TOPIC, payload=jpg_msg, qos=1, retain=False)
             
             #Save 5 images locally
             i += 1
