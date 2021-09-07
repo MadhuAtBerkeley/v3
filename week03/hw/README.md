@@ -66,9 +66,9 @@
 
 4.  S3 buckets
 
-    The S3 bucket w251-s3-bucket was created on AWS using my access_key and secret_access_key. The S3 bucket was mounted in the Ubuntu EC2 using the command below.
+    The S3 bucket w251-s3-bucket was created on AWS using my access_key and secret_access_key. The S3 bucket was mounted in the Ubuntu EC2 using the command below. The cloud processor dumps received images (with faces) to the folder /s3fs
     
-    `sudo s3fs w251-s3-bucket /home/ubuntu/work/v3/week03/hw/s3fs/hw3_data -o passwd_file=${HOME}/.passwd-s3fs,nonempty,rw,allow_other,,mp_umask=0007,uid=1000,gid=1000`
+    `sudo s3fs w251-s3-bucket /home/ubuntu/work/v3/week03/hw/s3fs/ -o passwd_file=${HOME}/.passwd-s3fs,nonempty,rw,allow_other,,mp_umask=0007,uid=1000,gid=1000`
 
 ## Submission
 
