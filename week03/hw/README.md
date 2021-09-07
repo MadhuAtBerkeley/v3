@@ -17,7 +17,7 @@
 
 3. MQTT forwarder
 
-    This spins up the forwarder that connects with both broker, so make sure the broker is up on VSI as well (see below).
+    This spins up the forwarder that connects with both broker. So the remote broker in the cloud must be started before running forwarder.
 
     * Build the image
 
@@ -37,7 +37,7 @@
 
         `sudo docker run --rm --privileged -e DISPLAY --name nx_face_detector --network hw03 -v ~/work/W251/v3/week03/hw/:/home/ -ti nx_face_detector /bin/bash /home/nx_face_detector.sh`
 
-    * Note that in `nx_face_detector.py` I added in a timeout of 5 seconds as well as a single digit counter to keep track of faces/pictures. These were used just so that I don't overwhelm the output with tons of images. Tests have been done with these two restrictions removed and it still works nicely. 
+   A timeout of 5 seconds is added with counters to keep track of faces/pictures. This is 5 second is chosen based on the use case (where prisoners are let-in one person at a time with gap of 10 seconds). Tests have been done with this restriction removed and it works fine. 
 
 ## On AWS
 
@@ -58,8 +58,6 @@
 
     * Build the image
 
-        Unfortunately, I didn't find a way to decode the bytes message without openCV, so this receiver image is the same with the image for face detector, except that I also needed to add `s3cmd`. It is bigger than I idealy wanted, but it works for now.
-
         `sudo docker build -t cluod_prcessor -f dockerfile_cloud_processor .`
 
     * Spin up container and run `cloud_procssor.py`
@@ -74,7 +72,7 @@
 
 ## Submission
 
-1. The repo for the code can be found at `https://github.com/MadhuAtBerkeley/W251/v3/tree/master/week03/hw`, please let me know if there is any trouble accessing it.
+1. The repo for the code can be found at `https://github.com/MadhuAtBerkeley/W251/v3/tree/master/week03/hw`
 
 2. The link to the faces can be found at https://w251-s3-bucket.s3.us-west-2.amazonaws.com/face.jpg
 
