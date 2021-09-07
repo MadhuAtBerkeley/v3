@@ -20,7 +20,7 @@ def on_message_local(client, userdata, msg):
   try:
     print('Message received with len:{}'.format(len(msg.payload)))
     # if we wanted to re-publish this message, something like this should work
-    remote_mqttclient.publish(REMOTE_MQTT_TOPIC, payload=msg.payload, qos=0, retain=False)
+    remote_mqttclient.publish(REMOTE_MQTT_TOPIC, payload=msg.payload, qos=1, retain=False)
     #print('Message forwarded')
   except:
     print("Unexpected error:", sys.exc_info()[0])
