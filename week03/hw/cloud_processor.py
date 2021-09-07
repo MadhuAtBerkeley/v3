@@ -7,7 +7,7 @@ import sys
 # define local client
 CLOUD_MQTT_HOST="cloud_mqtt_broker"
 CLOUD_MQTT_PORT=1883
-CLOUD_MQTT_TOPIC="face_detect"
+CLOUD_MQTT_TOPIC="area_1/face_detect"
 
 def on_connect_cloud(client, userdata, flags, rc):
         print("connected to cloud broker with rc: " + str(rc))
