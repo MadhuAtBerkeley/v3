@@ -8,7 +8,7 @@ import time
 # start MQTT client ================================================================================
 LOCAL_MQTT_HOST="nx_mqtt_broker"
 LOCAL_MQTT_PORT=1883
-LOCAL_MQTT_TOPIC="face_detect"
+LOCAL_MQTT_TOPIC="loc_0/face_detect"
 
 def on_connect_local(client, userdata, flags, rc):
         print("connected to local broker with rc: " + str(rc))
