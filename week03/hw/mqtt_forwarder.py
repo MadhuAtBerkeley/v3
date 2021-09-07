@@ -4,11 +4,11 @@ import sys
   
 LOCAL_MQTT_HOST="nx_mqtt_broker"
 LOCAL_MQTT_PORT=1883
-LOCAL_MQTT_TOPIC="face_detect"
+LOCAL_MQTT_TOPIC="loc_0/face_detect"
 
 REMOTE_MQTT_HOST="54.186.188.18"
 REMOTE_MQTT_PORT=1883
-REMOTE_MQTT_TOPIC="face_detect"
+REMOTE_MQTT_TOPIC="area_1/face_detect"
 
 
 def on_connect_local(client, userdata, flags, rc):
