@@ -14,14 +14,19 @@ spec:
     spec:
       containers:
       - name: facedetect
-        image: face_detector:v1
+        image: face_detector:v2
         volumeMounts:
         - mountPath: /dev/video0
           name: dev-video0
+        - mountPath: /apps
+          name: apps
         securityContext:
           privileged: true
       volumes:
       - name: dev-video0
         hostPath:
            path: /dev/video0
+      - name: apps
+        hostPath:
+           path: /home/madhu/work/W251_HW/v3/week03/hw_kb
         
