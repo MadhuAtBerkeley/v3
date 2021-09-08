@@ -4,7 +4,7 @@ import sys
   
 LOCAL_MQTT_HOST="mosquitto-service"
 LOCAL_MQTT_PORT=1883
-LOCAL_MQTT_TOPIC="my_topic" #loc_0/face_detect"
+LOCAL_MQTT_TOPIC="loc_0/face_detect"
 
 REMOTE_MQTT_HOST="54.186.188.18"
 REMOTE_MQTT_PORT=1883
@@ -18,7 +18,7 @@ def on_connect_local(client, userdata, flags, rc):
 
 def on_message_local(client, userdata, msg):
   try:
-    print('Message received with len:{}'.format(len(msg.payload)))
+    print('Message No :{} received with len:{}'.format(msg.payload[0], len(msg.payload[1:])))
     # if we wanted to re-publish this message, something like this should work
     remote_mqttclient.publish(REMOTE_MQTT_TOPIC, payload=msg.payload, qos=1, retain=False)
     #print('Message forwarded')
