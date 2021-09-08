@@ -7,7 +7,7 @@ import sys
 # define local client
 CLOUD_MQTT_HOST="cloud_mqtt_broker"
 CLOUD_MQTT_PORT=1883
-CLOUD_MQTT_TOPIC="face_detect"
+CLOUD_MQTT_TOPIC="area_1/face_detect"
 
 def on_connect_cloud(client, userdata, flags, rc):
         print("connected to cloud broker with rc: " + str(rc))
@@ -19,8 +19,8 @@ def on_message_cloud(client, userdata, msg):
     #i = int(msg.payload[0])   # get message number
     jpg_msg = msg.payload
     print("Received message with size" {}".format(len(jpg_msg)))	    
-    jpg_img = cv2.imdecode(np.frombuffer(jpg_msg, dtype='uint8'),cv2.IMREAD_COLOR)
-    cv2.imwrite('/home/s3fs_data/face.jpg', jpg_img)
+    jpg_img = cv2.imdecode(np.frombuffer(jpg_msg, dtype='uint8'),cv2.IMREAD_GRAYSCALE)
+    cv2.imwrite('/home/s3fs/face.jpg', jpg_img)
    
   except:
     print("Unexpected error:", sys.exc_info()[0])

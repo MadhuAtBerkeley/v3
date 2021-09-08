@@ -4,11 +4,11 @@ import sys
   
 LOCAL_MQTT_HOST="nx_mqtt_broker"
 LOCAL_MQTT_PORT=1883
-LOCAL_MQTT_TOPIC="face_detect"
+LOCAL_MQTT_TOPIC="loc_0/face_detect"
 
 REMOTE_MQTT_HOST="54.186.188.18"
 REMOTE_MQTT_PORT=1883
-REMOTE_MQTT_TOPIC="face_detect"
+REMOTE_MQTT_TOPIC="area_1/face_detect"
 
 
 def on_connect_local(client, userdata, flags, rc):
@@ -20,7 +20,7 @@ def on_message_local(client, userdata, msg):
   try:
     print('Message received with len:{}'.format(len(msg.payload)))
     # if we wanted to re-publish this message, something like this should work
-    remote_mqttclient.publish(REMOTE_MQTT_TOPIC, payload=msg.payload, qos=0, retain=False)
+    remote_mqttclient.publish(REMOTE_MQTT_TOPIC, payload=msg.payload, qos=1, retain=False)
     #print('Message forwarded')
   except:
     print("Unexpected error:", sys.exc_info()[0])
