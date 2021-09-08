@@ -2,42 +2,45 @@
 
 ## On Jetson NX
 
-1. Create a bridge network
-`docker network create --driver bridge hw03`
-
-2. MQTT broker
+Start k3s if not started already - `sudo systemctl start k3s`
+ 
+1. MQTT broker
 
     * Build the image
 
-        `sudo docker build -t nx_mqtt_broker -f dockerfile_mqtt_broker .`
+        `sudo docker build -t nx_mqtt_broker:v1 -f dockerfile_mqtt_broker .`
 
-    * Spin up container and establish broker
+    * Spin up the pod and establish broker in Kubernetes. Port 1883 is used for communication.
 
-        `sudo docker run --rm --name nx_mqtt_broker --network hw03 -p 1883:1883 -ti mqtt_broker /usr/sbin/mosquitto`
+        `kubectl apply -f nx_brokerDeploy.yaml`
+        
+    * Start `mosquitto_service` 
+
+        `kubectl apply -f nx_brokerService.yaml`    
 
 3. MQTT forwarder
 
-    This spins up the forwarder that connects with both broker. So the remote broker in the cloud must be started before running forwarder.
+    This spins up the forwarder that connects with the local/NX and the cloud broker. So the remote broker in the cloud must be started before running forwarder.
 
-    * Build the image
+    * Build the image. 
 
-        `sudo docker build -t nx_mqtt_forwarder -f dockerfile_mqtt_forwarder .`
+        `sudo docker build -t mqtt_forwarder:v2 -f dockerfile_mqtt_forwarder .`
 
-    * Spin up container and run `nx_forwarder.py`
+    * Spin up container and run `mqtt_forwarder.py`. The folder with source code is mounted within the pod as /apps.
 
-        `sudo docker run --rm --name nx_mqtt_forwarder --network hw03 -v ~/work/W251/v3/week03/hw/:/home/ -ti nx_mqtt_forwarder /bin/sh /home/mqtt_forwarder.sh`
+        `kubectl apply -f mqtt_forwarder.yaml`
 
 4. OpenCV face detector
 
     * Build the image
 
-        `sudo docker build -t nx_face_detector -f dockerfile_face_detector .`
+        `sudo docker build -t face_detector -f dockerfile_face_detector .`
 
-    * Spin up the container and run `nx_face_detector.py`
+    * Spin up the pod and run `face_detector.py`. The folder with source code is mounted within the pod as /apps. The folder /dev/video0 is mounted as well. Also, pod is started with privileged: True to provide acces to the camera on the host machine.
 
-        `sudo docker run --rm --privileged -e DISPLAY --name nx_face_detector --network hw03 -v ~/work/W251/v3/week03/hw/:/home/ -ti nx_face_detector /bin/bash /home/nx_face_detector.sh`
+        `kubectl apply -f face_detector.yaml`
 
-   A timeout of 5 seconds is added with counters to keep track of faces/pictures. This is 5 second is chosen based on the use case (where prisoners are let-in one person at a time with gap of 10 seconds). Tests have been done with this restriction removed and it works fine. 
+   A timeout of 5 seconds is added with counters to keep track of faces/pictures. This 5 second is chosen based on the use case (where prisoners are let-in one person at a time with gap of 10 seconds). Tests have been done with this restriction removed and it works fine. Currently, recent 5 photos are stored.
 
 ## On AWS
 
