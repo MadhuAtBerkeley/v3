@@ -14,4 +14,13 @@ spec:
     spec:
       containers:
       - name: mqttforward
-        image: mqtt_forward:v1
+        image: mqtt_forward:v2
+        volumeMounts:
+        - mountPath: /apps
+          name: apps
+#        securityContext:
+#          privileged: true
+      volumes:
+      - name: apps
+        hostPath:
+           path: /home/madhu/work/W251_HW/v3/week03/hw_kb
