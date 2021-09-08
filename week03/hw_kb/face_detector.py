@@ -6,7 +6,7 @@ import cv2
 
 LOCAL_MQTT_HOST="mosquitto-service"
 LOCAL_MQTT_PORT= 1883  
-LOCAL_MQTT_TOPIC="my_topic"
+LOCAL_MQTT_TOPIC="loc_0/face_detect"
 
 def on_connect_local(client, userdata, flags, rc):
         print("connected to local broker with rc: " + str(rc))
@@ -43,16 +43,18 @@ while(True):
             #convert to msg bytes
             jpg_msg = cv2.imencode('.jpg', face)[1].tobytes()
             
+            #add message/image number
+            msg = bytes([i])+jpg_msg
             
             # forward to mqtt broker on jetson
             print("publishing message")
          
-            local_mqttclient.publish(LOCAL_MQTT_TOPIC, payload=jpg_msg, qos=1, retain=False)
+            local_mqttclient.publish(LOCAL_MQTT_TOPIC, payload=msg, qos=1, retain=False)
             
             #Save 5 images locally
             i += 1
             if (i == 5): i = 0
-            #cv2.imwrite('/home/debug'+str(i)+'.png', face)
+            #cv2.imwrite('/face'+str(i)+'.png', face)
             time.sleep(5)
 
 
