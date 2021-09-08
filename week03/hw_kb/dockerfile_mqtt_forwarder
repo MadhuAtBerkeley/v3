@@ -10,6 +10,6 @@ RUN apt-get install -y python3-opencv python3-pip vim-tiny mosquitto-clients lib
 RUN pip3 install paho-mqtt
 
 
-WORKDIR /
-COPY mqtt_forwarder.py mqtt_forwarder.py
+WORKDIR /apps
+#COPY mqtt_forwarder.py mqtt_forwarder.py
 CMD python3 ./mqtt_forwarder.py
