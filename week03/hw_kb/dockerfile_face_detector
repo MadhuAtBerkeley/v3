@@ -11,9 +11,9 @@ RUN apt-get install -y python3-opencv python3-pip vim-tiny mosquitto-clients lib
 RUN pip3 install paho-mqtt
 
 
-WORKDIR /
-COPY face_detector.py face_detector.py
-COPY haarcascade_frontalface_default.xml haarcascade_frontalface_default.xml
+WORKDIR /apps
+#COPY face_detector.py face_detector.py
+#COPY haarcascade_frontalface_default.xml haarcascade_frontalface_default.xml
 CMD python3 ./face_detector.py
 
 
