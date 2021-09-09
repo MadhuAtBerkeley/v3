@@ -18,7 +18,7 @@ def on_message_cloud(client, userdata, msg):
   try:
     i = int(msg.payload[0])   # get message number
     jpg_msg = msg.payload[1:]
-    print("Received message with size" {}".format(len(jpg_msg)))	    
+    print("Received message with size {}".format(len(jpg_msg)))	    
     jpg_img = cv2.imdecode(np.frombuffer(jpg_msg, dtype='uint8'),cv2.IMREAD_GRAYSCALE)
     cv2.imwrite('/home/s3fs/face'+str(i)+'.jpg', jpg_img)
    
