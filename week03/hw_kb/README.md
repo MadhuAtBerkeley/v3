@@ -57,15 +57,15 @@ Start k3s if not started already - `sudo systemctl start k3s`
 
         `sudo docker run --rm --name cloud_mqtt_broker --network hw03 -p 1883:1883 -ti cloud_mqtt_broker /usr/sbin/mosquitto`
 
-3. Cloud MQTT Prcessoor
+3. Cloud MQTT Processor
 
     * Build the image
 
-        `sudo docker build -t cluod_prcessor -f dockerfile_cloud_processor .`
+        `sudo docker build -t cloud_processor -f dockerfile_cloud_processor .`
 
-    * Spin up container and run `cloud_procssor.py`
+    * Spin up container and run `cloud_processor.py`
 
-        `sudo docker run --rm --name cloud_processor --network hw03 -v $PWD/:/home/ -ti cloud_processor /bin/bash /home/cloud_prcessor.sh`
+        `sudo docker run --rm --name cloud_processor --network hw03 -v $PWD/:/home/ -ti cloud_processor /bin/bash /home/cloud_processor.sh`
 
 4.  S3 buckets
 
