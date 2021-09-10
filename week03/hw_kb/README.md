@@ -34,7 +34,7 @@ Start k3s if not started already - `sudo systemctl start k3s`
 
     * Build the image
 
-        `sudo docker build -t face_detector -f dockerfile_face_detector .`
+        `sudo docker build -t face_detector:v2 -f dockerfile_face_detector .`
 
     * Spin up the pod and run `face_detector.py`. The folder with source code is mounted within the pod as /apps. The folder /dev/video0 is mounted as well. Also, pod is started with privileged: True to provide acces to the camera on the host machine.
 
