@@ -77,7 +77,7 @@ Start k3s if not started already - `sudo systemctl start k3s`
 
 1. The repo for the code can be found at `https://github.com/MadhuAtBerkeley/W251/v3/tree/master/week03/hw`
 
-2. The link to the faces can be found at 
+2. The link to the faces with bounding box are:
 
  https://w251-s3-bucket.s3.us-west-2.amazonaws.com/face0.jpg
  
@@ -88,6 +88,18 @@ Start k3s if not started already - `sudo systemctl start k3s`
  https://w251-s3-bucket.s3.us-west-2.amazonaws.com/face3.jpg
  
  https://w251-s3-bucket.s3.us-west-2.amazonaws.com/face4.jpg
+ 
+ The cropped faces are at:
+
+ https://w251-s3-bucket.s3.us-west-2.amazonaws.com/face_crop0.jpg
+ 
+ https://w251-s3-bucket.s3.us-west-2.amazonaws.com/face_crop1.jpg
+ 
+ https://w251-s3-bucket.s3.us-west-2.amazonaws.com/face_crop2.jpg
+ 
+ https://w251-s3-bucket.s3.us-west-2.amazonaws.com/face_crop3.jpg
+ 
+ https://w251-s3-bucket.s3.us-west-2.amazonaws.com/face_crop4.jpg
 
 3. Naming of the MQTT topics: I created a two level topic for the MQTT brokers. I defined an use case for this project - detecting prisoners at a door location loc_0 and the edge device sends images with prisoner faces to MQTT forwarder/server of prison building location area_1 (geographic area). Then the forwarder send the prisoner images to the cloud.  The topic used for local broker within the prison(from door 0) is `loc_0/face_detect` and topic used for forwarding the images to the cloud (from prison location area_1) is `area_1/face_detect`
 
