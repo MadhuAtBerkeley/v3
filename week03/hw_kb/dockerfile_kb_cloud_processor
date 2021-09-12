@@ -1,0 +1,15 @@
+FROM ubuntu:latest
+
+RUN apt update 
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+
+RUN apt-get install -y python3-opencv python3-pip vim-tiny mosquitto-clients libopencv-dev
+RUN pip3 install paho-mqtt
+
+WORKDIR /apps
+
+CMD python3 ./cloud_processor.py
+
+

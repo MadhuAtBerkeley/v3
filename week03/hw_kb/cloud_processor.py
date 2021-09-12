@@ -5,7 +5,7 @@ from os import system
 import sys
 
 # define local client
-CLOUD_MQTT_HOST="cloud_mqtt_broker"
+CLOUD_MQTT_HOST="cloud-service"
 CLOUD_MQTT_PORT=1883
 CLOUD_MQTT_TOPIC="area_1/face_detect"
 
