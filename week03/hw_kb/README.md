@@ -47,7 +47,7 @@ Start k3s if not started already - `sudo systemctl start k3s`
 1. Create a bridge network
 `sudo docker network create --driver bridge hw03`
 
-2. Cloud MQTT broker
+2. Cloud MQTT broker Docker version
 
     * Build the image
 
@@ -56,8 +56,18 @@ Start k3s if not started already - `sudo systemctl start k3s`
     * Spin up container and establish broker
 
         `sudo docker run --rm --name cloud_mqtt_broker --network hw03 -p 1883:1883 -ti cloud_mqtt_broker /usr/sbin/mosquitto`
+        
+        
+    * Kubernetes Version:
 
-3. Cloud MQTT Processor
+        `sudo docker build -t cloud_mqtt_broker -f dockerfile_kb_cloud_broker .`
+
+        `kubectl apply -f cloud_brokerDeploy.yaml`
+        
+        `kubectl apply -f cloud_brokerService.yaml`
+
+
+3. Cloud MQTT Processor (Docker version)
 
     * Build the image
 
@@ -66,6 +76,15 @@ Start k3s if not started already - `sudo systemctl start k3s`
     * Spin up container and run `cloud_processor.py`
 
         `sudo docker run --rm --name cloud_processor --network hw03 -v $PWD/:/home/ -ti cloud_processor /bin/bash /home/cloud_processor.sh`
+        
+        
+    * Kubernetes version
+
+        `sudo docker build -t cloud_processor -f dockerfile_kb_cloud_processor .`
+        
+        `kubectl apply -f cloud_processor.yaml`
+
+   
 
 4.  S3 buckets
 
