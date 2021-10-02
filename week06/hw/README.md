@@ -1,8 +1,6 @@
 # Homework 6
 
-This homework covers some use of GStreamer and model optimization.  It builds on the week 6 lab and completing the lab first is hightly recommended.   
-
-This is an ungraded assignment
+This homework covers some use of GStreamer and model optimization.  
 
 ## Part 1: GStreamer
 
@@ -10,8 +8,29 @@ This is an ungraded assignment
 ```
 gst-launch-1.0 v4l2src device=/dev/video0 ! xvimagesink
 ```
+Ans:
+
+```
+gst-launch-1.0 v4l2src device=/dev/video0 ! 'video/x-raw'  ! nvvidconv ! nvegltransform  ! nveglglessink sync=false
+```
 
 2. What is the difference between a property and a capability?  How are they each expressed in a pipeline?
+
+Ans:  Capabilities describe the types of media that may stream over a pad created from the template of an element. Properties are used to describe extra information for capabilities and consists of a key (a string) and a value. One example is give below - "audio/x-raw" is the capability and properties are given below as key value pairs.
+
+```
+Pad Templates:
+  SRC template: 'src'
+    Availability: Always
+    Capabilities:
+      audio/x-raw
+                 format: F32LE
+                   rate: [ 1, 2147483647 ]
+               channels: [ 1, 256 ]
+
+
+```
+
 
 3. Explain the following pipeline, that is explain each piece of the pipeline, desribing if it is an element (if so, what type), property, or capability.  What does this pipeline do?
 
