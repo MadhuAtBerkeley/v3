@@ -48,14 +48,22 @@ The description of the pipeline is as follows
    e. 'xvimagesink' : XvImageSink renders video frames to a drawable on a local display. sync=false disables A/V sync.
    
 
-4. GStreamer pipelines may also be used from Python and OpenCV.  For example:
+4. GStreamer pipelines may also be used from Python and OpenCV. 
+
+Client:
+```
+ gst-launch-1.0 -v v4l2src ! video/x-raw ! jpegenc ! rtpjpegpay ! udpsink host=127.0.0.1 port=5000
+
+```
+Server:
+
 ```
 import numpy as np
 import cv2
 
 # use gstreamer for video directly; set the fps
-camSet='v4l2src device=/dev/video0 ! video/x-raw,framerate=30/1 ! videoconvert ! video/x-raw, format=BGR ! appsink'
-cap= cv2.VideoCapture(camSet)
+server_cmd='udpsrc port=5000 ! application/x-rtp,media=video,payload=26,clock-rate=90000,encoding-name=JPEG,framerate=30/1 ! rtpjpegdepay ! jpegdec ! videoconvert ! appsink'
+cap= cv2.VideoCapture(server_cmd)
 
 #cap = cv2.VideoCapture(0)
 
@@ -72,20 +80,11 @@ while(True):
 cap.release()
 cv2.destroyAllWindows()
 ```
-In the lab, you saw how to stream using Gstreamer.  Using the lab and the above example, write a Python application that listens for images streamed from a Gstreamer pipeline.  You'll want to make sure your image displays in color.
 
-For part 1, you'll need to submit:
-- Answer to question 1
-- Answer to question 2
-- Answer to question 3
-- Source code and Gstreamer "server" pipeline used.
 
 
 ## Part 2: Model optimization and quantization
 
-In lab, you saw to how use leverage TensorRT with TensorFlow.  For this homework, you'll look at another way to levarage TensorRT with Pytorch via the Jetson Inference library (https://github.com/dusty-nv/jetson-inference).
-
-You'll want to train a custom image classification model, using either the fruit example or your own set of classes.
 
 Like in the lab, you'll want to first baseline the your model, looking a the image of images per second it can process.  You may train the model using your Jetson device and the Jetson Inference scripts or train on a GPU eanabled server/virtual machine.  Once you have your baseline, follow the steps/examples outlined in the Jetson Inference to run your model with TensorRT (the defaults used are fine) and determine the number of images per second that are processed.
 
