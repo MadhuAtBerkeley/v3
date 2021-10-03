@@ -92,8 +92,63 @@ You may use either the container apporach or build the library from source.
 
 For part 2, you'll need to submit:
 - The base model you used
-- A description of your data set
-- How long you trained your model, how many epochs you specified, and the batch size.
-- Native Pytorch baseline
-- TensorRT performance numbers
+```
+The base line model is resnet18()
+```
 
+- A description of your data set: The cat and dog dataset as below:
+
+```
+$ cd jetson-inference/python/training/classification/data
+$ wget https://nvidia.box.com/shared/static/o577zd8yp3lmxf5zhm38svrbrv45am3y.gz -O cat_dog.tar.gz
+$ tar xvzf cat_dog.tar.gz
+```
+- How long you trained your model, how many epochs you specified, and the batch size.
+- 
+```
+Epoch: [34] completed, elapsed time 176.884 seconds
+Total time :34*3 minutes
+Batch Size ; 16
+```
+- Native Pytorch baseline
+- 
+```
+Epoch: [34] completed, elapsed time 176.884 seconds
+[W pthreadpool-cpp.cc:90] Warning: Leaking Caffe2 thread-pool after fork. (function pthreadpool)
+[W pthreadpool-cpp.cc:90] Warning: Leaking Caffe2 thread-pool after fork. (function pthreadpool)
+Test: [  0/125]  Time  0.425 ( 0.425)  Loss 4.8451e-01 (4.8451e-01)  Acc@1  62.50 ( 62.50)  Acc@5 100.00 (100.00)
+Test: [ 10/125]  Time  0.086 ( 0.118)  Loss 7.2746e-01 (6.3123e-01)  Acc@1  50.00 ( 60.23)  Acc@5 100.00 (100.00)
+Test: [ 20/125]  Time  0.092 ( 0.109)  Loss 4.6943e-01 (6.3898e-01)  Acc@1  75.00 ( 60.71)  Acc@5 100.00 (100.00)
+Test: [ 30/125]  Time  0.090 ( 0.102)  Loss 4.4111e-01 (6.2322e-01)  Acc@1  75.00 ( 62.50)  Acc@5 100.00 (100.00)
+Test: [ 40/125]  Time  0.087 ( 0.099)  Loss 6.9490e-01 (5.9237e-01)  Acc@1  75.00 ( 65.85)  Acc@5 100.00 (100.00)
+Test: [ 50/125]  Time  0.091 ( 0.101)  Loss 8.4453e-01 (5.9428e-01)  Acc@1  75.00 ( 66.91)  Acc@5 100.00 (100.00)
+Test: [ 60/125]  Time  0.088 ( 0.100)  Loss 6.8690e-01 (5.9127e-01)  Acc@1  50.00 ( 66.80)  Acc@5 100.00 (100.00)
+Test: [ 70/125]  Time  0.088 ( 0.098)  Loss 3.8540e-01 (5.5636e-01)  Acc@1  87.50 ( 69.37)  Acc@5 100.00 (100.00)
+Test: [ 80/125]  Time  0.086 ( 0.097)  Loss 3.3433e-01 (5.2345e-01)  Acc@1 100.00 ( 72.07)  Acc@5 100.00 (100.00)
+Test: [ 90/125]  Time  0.087 ( 0.096)  Loss 3.4846e-01 (5.0587e-01)  Acc@1  87.50 ( 73.76)  Acc@5 100.00 (100.00)
+Test: [100/125]  Time  0.085 ( 0.095)  Loss 4.1540e-01 (4.8987e-01)  Acc@1  87.50 ( 75.25)  Acc@5 100.00 (100.00)
+Test: [110/125]  Time  0.085 ( 0.094)  Loss 2.6516e-01 (4.7060e-01)  Acc@1 100.00 ( 76.80)  Acc@5 100.00 (100.00)
+Test: [120/125]  Time  0.087 ( 0.094)  Loss 1.7805e-01 (4.6015e-01)  Acc@1 100.00 ( 77.79)  Acc@5 100.00 (100.00)
+ * Acc@1 77.900 Acc@5 100.000
+saved checkpoint to:  models/cat_dog/checkpoint.pth.tar
+
+```
+
+- TensorRT performance numbers
+```
+detected model format - ONNX  (extension '.onnx')
+[TRT]    desired precision specified for GPU: FASTEST
+[TRT]    requested fasted precision for device GPU without providing valid calibrator, disabling INT8
+[TRT]    [MemUsageChange] Init CUDA: CPU +354, GPU +0, now: CPU 377, GPU 6745 (MiB)
+[TRT]    native precisions detected for GPU:  FP32, FP16, INT8
+[TRT]    selecting fastest native precision for GPU:  FP16
+[TRT]    attempting to open engine cache file models/cat_dog/resnet18.onnx.1.1.8001.GPU.FP16.engine
+[TRT]    loading network plan from engine cache... models/cat_dog/resnet18.onnx.1.1.8001.GPU.FP16.engine
+[TRT]    device GPU, loaded models/cat_dog/resnet18.onnx
+
+
+[image]  loaded 'data/cat_dog/test/dog/100.jpg'  (500x391, 3 channels)
+class 0000 - 0.352090  (cat)
+class 0001 - 0.647910  (dog)
+Accuracy of TensorRT model is 0.7
+```
