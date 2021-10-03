@@ -43,7 +43,9 @@ The description of the pipeline is as follows
    a. 'v4l2src device=/dev/video0' : v4l2src is the video source element and its device property is set to video cam (device=/dev/video0) \
    b. 'video/x-raw, framerate=30/1': This sets the capabilities of the media output from v4l2src (it can output different media types) \
    c. 'videoconvert': videoconvert is filter converted video element converts from one colorspace to other. It is needed here as the next element agingtv only supports few media types \
-   d. 
+   d. 'agingtv' : This element adds special effect - ages a video stream in realtime, changes the colors and adds scratches and dust. The scratch-lines property is set to 10 to add 10 scratch lines \
+   
+   e. 'xvimagesink' : XvImageSink renders video frames to a drawable on a local display. sync=false disables A/V sync.
    
 
 4. GStreamer pipelines may also be used from Python and OpenCV.  For example:
