@@ -40,7 +40,10 @@ gst-launch-1.0 v4l2src device=/dev/video0 ! video/x-raw, framerate=30/1 ! videoc
 
 The description of the pipeline is as follows
 
-a. 'v4l2src device=/dev/video0' : v4l2src is the video source element and its device property is set to video cam by setting device=/dev/video0
+   a. 'v4l2src device=/dev/video0' : v4l2src is the video source element and its device property is set to video cam (device=/dev/video0) \
+   b. 'video/x-raw, framerate=30/1': This sets the capabilities of the media output from v4l2src (it can output different media types) \
+   c. 
+   
 
 4. GStreamer pipelines may also be used from Python and OpenCV.  For example:
 ```
