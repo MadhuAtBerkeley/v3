@@ -42,7 +42,8 @@ The description of the pipeline is as follows
 
    a. 'v4l2src device=/dev/video0' : v4l2src is the video source element and its device property is set to video cam (device=/dev/video0) \
    b. 'video/x-raw, framerate=30/1': This sets the capabilities of the media output from v4l2src (it can output different media types) \
-   c. 
+   c. 'videoconvert': videoconvert is filter converted video element converts from one colorspace to other. It is needed here as the next element agingtv only supports few media types \
+   d. 
    
 
 4. GStreamer pipelines may also be used from Python and OpenCV.  For example:
