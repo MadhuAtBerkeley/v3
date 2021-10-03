@@ -38,6 +38,10 @@ Pad Templates:
 gst-launch-1.0 v4l2src device=/dev/video0 ! video/x-raw, framerate=30/1 ! videoconvert ! agingtv scratch-lines=10 ! videoconvert ! xvimagesink sync=false
 ```
 
+The description of the pipeline is as follows
+
+a. 'v4l2src device=/dev/video0' : v4l2src is the video source element and its device property is set to video cam by setting device=/dev/video0
+
 4. GStreamer pipelines may also be used from Python and OpenCV.  For example:
 ```
 import numpy as np
