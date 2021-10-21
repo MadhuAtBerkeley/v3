@@ -131,9 +131,10 @@ def train(gpu, args):
     criterion = nn.CrossEntropyLoss().cuda(gpu)
     optimizer = torch.optim.SGD(model.parameters(), 1e-4)
     # Wrap the model
-    model = nn.parallel.DistributedDataParallel(model, device_ids=[gpu])
+    #model = nn.parallel.DistributedDataParallel(model, device_ids=[gpu])
     
     model, optimizer = amp.initialize(model, optimizer, opt_level='O2')
+    model = DDP(model, device_ids=[gpu])
     
     train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset,
                                                                     num_replicas=args.world_size,
