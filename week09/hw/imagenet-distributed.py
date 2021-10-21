@@ -182,7 +182,8 @@ def train(gpu, args):
             if (i + 1) % 100 == 0 and gpu == 0:
                 #print('Epoch [{}/{}], Step [{}/{}], Train Loss: {:.4f}'.format(epoch + 1, args.epochs, i + 1, total_train_step,loss.item()))
                 progress.display(i)
-         
+        
+        print(' * Train Acc@1 {top1.avg:.3f} Train Acc@5 {top5.avg:.3f}'.format(top1=top1, top5=top5)) 
         model.eval()     
         top1 = AverageMeter('Acc@1', ':6.2f')
         top5 = AverageMeter('Acc@5', ':6.2f')
@@ -205,6 +206,7 @@ def train(gpu, args):
                 #print('Epoch [{}/{}], Step [{}/{}], Val Loss: {:.4f}'.format(epoch + 1, args.epochs, i + 1, total_val_step,loss.item()))
                 progress.display(i)
         model.train()
+        print(' * Val Acc@1 {top1.avg:.3f} Val Acc@5 {top5.avg:.3f}'.format(top1=top1, top5=top5))
                                                                                
     if gpu == 0:
         print("Training complete in: " + str(datetime.now() - start))
