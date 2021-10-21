@@ -150,12 +150,17 @@ def train(gpu, args):
     total_train_step = len(train_loader)
     total_val_step = len(val_loader)
     
+    #for epoch in range(args.epochs):
+
+    #########
+    #########
     for epoch in range(args.epochs):
-    	
-    	  losses = AverageMeter('Loss', ':.4e')
+        #losses = AverageMeter('Loss', ':.4e')
         top1 = AverageMeter('Acc@1', ':6.2f')
         top5 = AverageMeter('Acc@5', ':6.2f')
+        losses = AverageMeter('Loss', ':.4e')
         progress = ProgressMeter(len(train_loader),[losses, top1, top5], prefix="Epoch: [{}]".format(epoch))
+        
     	  
         for i, (images, labels) in enumerate(train_loader):
             images = images.cuda(non_blocking=True)
@@ -163,13 +168,20 @@ def train(gpu, args):
             # Forward pass
             outputs = model(images)
             loss = criterion(outputs, labels)
+            
+            # measure accuracy and record loss
+            acc1, acc5 = accuracy(outputs, labels, topk=(1, 5))
+            losses.update(loss.item(), images.size(0))
+            top1.update(acc1[0], images.size(0))
+            top5.update(acc5[0], images.size(0))
 
             # Backward and optimize
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
             if (i + 1) % 100 == 0 and gpu == 0:
-                print('Epoch [{}/{}], Step [{}/{}], Train Loss: {:.4f}'.format(epoch + 1, args.epochs, i + 1, total_train_step,loss.item()))
+                #print('Epoch [{}/{}], Step [{}/{}], Train Loss: {:.4f}'.format(epoch + 1, args.epochs, i + 1, total_train_step,loss.item()))
+                progress.display(i)
          
         model.eval()                                                             
         for i, (images, labels) in enumerate(val_loader):
