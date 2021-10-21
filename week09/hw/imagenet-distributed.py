@@ -1,4 +1,5 @@
 import os
+import shutil
 from datetime import datetime
 import argparse
 import torch.multiprocessing as mp
@@ -132,6 +133,8 @@ def train(gpu, args):
     # Wrap the model
     model = nn.parallel.DistributedDataParallel(model, device_ids=[gpu])
     
+    model, optimizer = amp.initialize(model, optimizer, opt_level='O2')
+    
     train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset,
                                                                     num_replicas=args.world_size,
                                                                     rank=rank)
@@ -184,7 +187,11 @@ def train(gpu, args):
 
             # Backward and optimize
             optimizer.zero_grad()
-            loss.backward()
+            
+            with amp.scale_loss(loss, optimizer) as scaled_loss:
+                scaled_loss.backward()
+                
+            #loss.backward()
             optimizer.step()
             if (i + 1) % 100 == 0 and gpu == 0:
                 #print('Epoch [{}/{}], Step [{}/{}], Train Loss: {:.4f}'.format(epoch + 1, args.epochs, i + 1, total_train_step,loss.item()))
