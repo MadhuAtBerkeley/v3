@@ -11,8 +11,12 @@ import torchvision.models as models
 import torch.distributed as dist
 from apex.parallel import DistributedDataParallel as DDP
 from apex import amp
+from torch.optim.lr_scheduler import OneCycleLR
 
 IMG_SIZE = 224
+LR = 0.1
+WEIGHT_DECAY = 3e-5
+
 # https://w251hw05.s3.us-west-1.amazonaws.com/ILSVRC2012_img_val.tar
 # https://w251hw05.s3.us-west-1.amazonaws.com/ILSVRC2012_img_train.tar
 # python mnist-distributed.py  -n 1 -g 1 -nr 0
@@ -126,23 +130,20 @@ def train(gpu, args):
     model = models.resnet18()
     torch.cuda.set_device(gpu)
     model.cuda(gpu)
-    batch_size = 64
+    batch_size = 128
     # define loss function (criterion) and optimizer
     criterion = nn.CrossEntropyLoss().cuda(gpu)
-    optimizer = torch.optim.SGD(model.parameters(), 1e-4)
-    # Wrap the model
-    #model = nn.parallel.DistributedDataParallel(model, device_ids=[gpu])
     
-    model, optimizer = amp.initialize(model, optimizer, opt_level='O2')
-    model = DDP(model)
+    
+    
     
     train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset,
                                                                     num_replicas=args.world_size,
                                                                     rank=rank)
     train_loader = torch.utils.data.DataLoader(dataset=train_dataset,
                                                batch_size=batch_size,
-                                               shuffle=False,
-                                               num_workers=0,
+                                               shuffle=True,
+                                               num_workers=6,
                                                pin_memory=True,
                                                sampler=train_sampler)
                                                
@@ -152,10 +153,23 @@ def train(gpu, args):
     val_loader = torch.utils.data.DataLoader(dataset=val_dataset,
                                                batch_size=batch_size,
                                                shuffle=False,
-                                               num_workers=0,
+                                               num_workers=6,
                                                pin_memory=True,
-                                               sampler=val_sampler)                                           
-
+                                               sampler=val_sampler)           
+                                               
+    optimizer = torch.optim.SGD(model.parameters(), lr=LR, momentum=0.9, weight_decay=WEIGHT_DECAY)
+    
+    # Use Super Convergence                                                                           
+    scheduler = OneCycleLR(optimizer, max_lr=1.0, steps_per_epoch=len(train_loader), epochs=2)
+    
+    # Wrap the model
+    #model = nn.parallel.DistributedDataParallel(model, device_ids=[gpu])
+    
+    
+    model, optimizer = amp.initialize(model, optimizer, opt_level='O2')
+    model = DDP(model)
+    
+    
     start = datetime.now()
     total_train_step = len(train_loader)
     total_val_step = len(val_loader)
@@ -194,6 +208,9 @@ def train(gpu, args):
                 
             #loss.backward()
             optimizer.step()
+            
+            scheduler.step()
+            
             if (i + 1) % 100 == 0 and gpu == 0:
                 #print('Epoch [{}/{}], Step [{}/{}], Train Loss: {:.4f}'.format(epoch + 1, args.epochs, i + 1, total_train_step,loss.item()))
                 progress.display(i)
