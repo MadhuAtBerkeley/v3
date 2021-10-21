@@ -96,7 +96,7 @@ def train(gpu, args):
     total_train_step = len(train_loader)
     total_val_step = len(val_loader)
     for epoch in range(args.epochs):
-    	  model.train()
+    	  
         for i, (images, labels) in enumerate(train_loader):
             images = images.cuda(non_blocking=True)
             labels = labels.cuda(non_blocking=True)
@@ -122,6 +122,7 @@ def train(gpu, args):
             if (i + 1) % 100 == 0 and gpu == 0:
                 print('Epoch [{}/{}], Step [{}/{}], Val Loss: {:.4f}'.format(epoch + 1, args.epochs, i + 1, total_val_step,loss.item()))
          
+        model.train()
                                                                                
     if gpu == 0:
         print("Training complete in: " + str(datetime.now() - start))
