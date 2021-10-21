@@ -155,6 +155,7 @@ def train(gpu, args):
     start = datetime.now()
     total_train_step = len(train_loader)
     total_val_step = len(val_loader)
+    best_acc1 = 0
     
     #for epoch in range(args.epochs):
 
@@ -198,10 +199,14 @@ def train(gpu, args):
         for i, (images, labels) in enumerate(val_loader):
             images = images.cuda(non_blocking=True)
             labels = labels.cuda(non_blocking=True)
+            
+            
             # Forward pass
             outputs = model(images)
             
             loss = criterion(outputs, labels)
+            
+            
             # measure accuracy and record loss
             acc1, acc5 = accuracy(outputs, labels, topk=(1, 5))
             losses.update(loss.item(), images.size(0))
