@@ -134,7 +134,7 @@ def train(gpu, args):
     #model = nn.parallel.DistributedDataParallel(model, device_ids=[gpu])
     
     model, optimizer = amp.initialize(model, optimizer, opt_level='O2')
-    model = DDP(model, device_ids=[gpu])
+    model = DDP(model)
     
     train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset,
                                                                     num_replicas=args.world_size,
