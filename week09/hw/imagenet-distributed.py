@@ -95,6 +95,12 @@ def accuracy(output, target, topk=(1,)):
             res.append(correct_k.mul_(100.0 / batch_size))
         return res
         
+def save_checkpoint(state, is_best, filename='./checkpoint.pth.tar'):
+    # save the model state!
+    # state ??? 
+    torch.save(state, filename)
+    if is_best:
+        shutil.copyfile(filename, './model.pth.tar')        
         
 class ProgressMeter(object):
     def __init__(self, num_batches, meters, prefix=""):
@@ -205,6 +211,18 @@ def train(gpu, args):
             if (i + 1) % 100 == 0 and gpu == 0:
                 #print('Epoch [{}/{}], Step [{}/{}], Val Loss: {:.4f}'.format(epoch + 1, args.epochs, i + 1, total_val_step,loss.item()))
                 progress.display(i)
+                
+                
+            is_best = acc1 > best_acc1
+            best_acc1 = max(acc1, best_acc1)    
+            
+            save_checkpoint({
+                      'epoch': epoch + 1,
+                      'state_dict': model.state_dict(),
+                      'best_acc1': best_acc1,
+                      'optimizer' : optimizer.state_dict(),
+            }, is_best)
+            
         model.train()
         print(' * Val Acc@1 {top1.avg:.3f} Val Acc@5 {top5.avg:.3f}'.format(top1=top1, top5=top5))
                                                                                
