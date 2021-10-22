@@ -130,7 +130,7 @@ def train(gpu, args):
     model = models.resnet18(pretrained=False)
     torch.cuda.set_device(gpu)
     model.cuda(gpu)
-    batch_size = 256
+    batch_size = 128
     # define loss function (criterion) and optimizer
     criterion = nn.CrossEntropyLoss().cuda(gpu)
     
@@ -160,7 +160,7 @@ def train(gpu, args):
     optimizer = torch.optim.SGD(model.parameters(), lr=LR, momentum=0.9, weight_decay=WEIGHT_DECAY)
     
     # Use Super Convergence                                                                           
-    scheduler = OneCycleLR(optimizer, max_lr=1.0, steps_per_epoch=len(train_loader), epochs=2)
+    scheduler = OneCycleLR(optimizer, max_lr=1.0, steps_per_epoch=len(train_loader), epochs=args.epochs)
     
     # Wrap the model
     model = nn.parallel.DistributedDataParallel(model, device_ids=[gpu])
@@ -183,10 +183,11 @@ def train(gpu, args):
         #losses = AverageMeter('Loss', ':.4e')
         top1 = AverageMeter('Acc@1', ':6.2f')
         top5 = AverageMeter('Acc@5', ':6.2f')
+        train_sampler.set_epoch(epoch)        
         losses = AverageMeter('Loss', ':.4e')
         progress = ProgressMeter(len(train_loader),[losses, top1, top5], prefix="Epoch: [{}]".format(epoch))
         
-    	  train_sampler.set_epoch(epoch)
+    	  #train_sampler.set_epoch(epoch)
         for i, (images, labels) in enumerate(train_loader):
             images = images.cuda(non_blocking=True)
             labels = labels.cuda(non_blocking=True)
