@@ -10,8 +10,8 @@ import torch.nn as nn
 import torchvision.models as models
 import torch.distributed as dist
 from apex.parallel import DistributedDataParallel as DDP
-from apex import amp
-from torch.optim.lr_scheduler import OneCycleLR
+#from apex import amp
+#from torch.optim.lr_scheduler import OneCycleLR
 
 IMG_SIZE = 224
 LR = 0.1
@@ -39,7 +39,7 @@ transform_val = transforms.Compose([
 ])
 
 # Data loading code
-TRAINDIR='./data/train'
+TRAINDIR='./data/val' #train'
 VALDIR = './data/val'
 train_dataset = torchvision.datasets.ImageFolder(TRAINDIR, transform=transform_train)     
 val_dataset = torchvision.datasets.ImageFolder(VALDIR, transform=transform_val)             
@@ -127,10 +127,10 @@ def train(gpu, args):
     rank = args.nr * args.gpus + gpu
     dist.init_process_group(backend='nccl', init_method='env://', world_size=args.world_size, rank=rank)
     torch.manual_seed(0)
-    model = models.resnet18()
+    model = models.resnet18(pretrained=False)
     torch.cuda.set_device(gpu)
     model.cuda(gpu)
-    batch_size = 128
+    batch_size = 256
     # define loss function (criterion) and optimizer
     criterion = nn.CrossEntropyLoss().cuda(gpu)
     
@@ -142,7 +142,7 @@ def train(gpu, args):
                                                                     rank=rank)
     train_loader = torch.utils.data.DataLoader(dataset=train_dataset,
                                                batch_size=batch_size,
-                                               shuffle=True,
+                                               shuffle=False,
                                                num_workers=6,
                                                pin_memory=True,
                                                sampler=train_sampler)
@@ -163,11 +163,11 @@ def train(gpu, args):
     scheduler = OneCycleLR(optimizer, max_lr=1.0, steps_per_epoch=len(train_loader), epochs=2)
     
     # Wrap the model
-    #model = nn.parallel.DistributedDataParallel(model, device_ids=[gpu])
+    model = nn.parallel.DistributedDataParallel(model, device_ids=[gpu])
     
     
-    model, optimizer = amp.initialize(model, optimizer, opt_level='O2')
-    model = DDP(model)
+    #model, optimizer = amp.initialize(model, optimizer, opt_level='O2')
+    #model = DDP(model)
     
     
     start = datetime.now()
@@ -195,18 +195,19 @@ def train(gpu, args):
             loss = criterion(outputs, labels)
             
             # measure accuracy and record loss
-            acc1, acc5 = accuracy(outputs, labels, topk=(1, 5))
-            losses.update(loss.item(), images.size(0))
-            top1.update(acc1[0], images.size(0))
-            top5.update(acc5[0], images.size(0))
+            if gpu == 0:
+                acc1, acc5 = accuracy(outputs, labels, topk=(1, 5))
+                losses.update(loss.item(), images.size(0))
+                top1.update(acc1[0], images.size(0))
+                top5.update(acc5[0], images.size(0))
 
             # Backward and optimize
             optimizer.zero_grad()
             
-            with amp.scale_loss(loss, optimizer) as scaled_loss:
-                scaled_loss.backward()
+            #with amp.scale_loss(loss, optimizer) as scaled_loss:
+            #    scaled_loss.backward()
                 
-            #loss.backward()
+            loss.backward()
             optimizer.step()
             
             scheduler.step()
