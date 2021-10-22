@@ -39,7 +39,7 @@ transform_val = transforms.Compose([
 ])
 
 # Data loading code
-TRAINDIR='./data/val' #train'
+TRAINDIR='./data/train'
 VALDIR = './data/val'
 train_dataset = torchvision.datasets.ImageFolder(TRAINDIR, transform=transform_train)     
 val_dataset = torchvision.datasets.ImageFolder(VALDIR, transform=transform_val)             
@@ -186,7 +186,7 @@ def train(gpu, args):
         losses = AverageMeter('Loss', ':.4e')
         progress = ProgressMeter(len(train_loader),[losses, top1, top5], prefix="Epoch: [{}]".format(epoch))
         
-    	  
+    	  train_sampler.set_epoch(epoch)
         for i, (images, labels) in enumerate(train_loader):
             images = images.cuda(non_blocking=True)
             labels = labels.cuda(non_blocking=True)
@@ -215,8 +215,9 @@ def train(gpu, args):
             if (i + 1) % 100 == 0 and gpu == 0:
                 #print('Epoch [{}/{}], Step [{}/{}], Train Loss: {:.4f}'.format(epoch + 1, args.epochs, i + 1, total_train_step,loss.item()))
                 progress.display(i)
-        
-        print(' * Train Acc@1 {top1.avg:.3f} Train Acc@5 {top5.avg:.3f}'.format(top1=top1, top5=top5)) 
+        if(gpu == 0):
+            print(' * Train Acc@1 {top1.avg:.3f} Train Acc@5 {top5.avg:.3f}'.format(top1=top1, top5=top5)) 
+            
         model.eval()     
         top1 = AverageMeter('Acc@1', ':6.2f')
         top5 = AverageMeter('Acc@5', ':6.2f')
@@ -234,10 +235,11 @@ def train(gpu, args):
             
             
             # measure accuracy and record loss
-            acc1, acc5 = accuracy(outputs, labels, topk=(1, 5))
-            losses.update(loss.item(), images.size(0))
-            top1.update(acc1[0], images.size(0))
-            top5.update(acc5[0], images.size(0))
+            if gpu == 0:
+                acc1, acc5 = accuracy(outputs, labels, topk=(1, 5))
+                losses.update(loss.item(), images.size(0))
+                top1.update(acc1[0], images.size(0))
+                top5.update(acc5[0], images.size(0))
             
             if (i + 1) % 100 == 0 and gpu == 0:
                 #print('Epoch [{}/{}], Step [{}/{}], Val Loss: {:.4f}'.format(epoch + 1, args.epochs, i + 1, total_val_step,loss.item()))
@@ -255,7 +257,8 @@ def train(gpu, args):
             }, is_best)
             
         model.train()
-        print(' * Val Acc@1 {top1.avg:.3f} Val Acc@5 {top5.avg:.3f}'.format(top1=top1, top5=top5))
+        if gpu == 0:
+            print(' * Val Acc@1 {top1.avg:.3f} Val Acc@5 {top5.avg:.3f}'.format(top1=top1, top5=top5))
                                                                                
     if gpu == 0:
         print("Training complete in: " + str(datetime.now() - start))
