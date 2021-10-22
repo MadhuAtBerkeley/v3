@@ -9,9 +9,9 @@ import torch
 import torch.nn as nn
 import torchvision.models as models
 import torch.distributed as dist
-from apex.parallel import DistributedDataParallel as DDP
+#from apex.parallel import DistributedDataParallel as DDP
 #from apex import amp
-#from torch.optim.lr_scheduler import OneCycleLR
+from torch.optim.lr_scheduler import OneCycleLR
 
 IMG_SIZE = 224
 LR = 0.1
@@ -56,7 +56,7 @@ def main():
                         help='number of total epochs to run')
     args = parser.parse_args()
     args.world_size = args.gpus * args.nodes
-    os.environ['MASTER_ADDR'] = '34.216.242.155'
+    os.environ['MASTER_ADDR'] = '34.208.46.180'
     os.environ['MASTER_PORT'] = '8888'
     mp.spawn(train, nprocs=args.gpus, args=(args,))
 
