@@ -60,6 +60,12 @@ def main():
                         help='ranking within the nodes')
     parser.add_argument('--epochs', default=2, type=int, metavar='N',
                         help='number of total epochs to run')
+    parser.add_argument('--resume', default='', type=str, metavar='PATH',
+                    help='path to latest checkpoint (default: none)')
+                    
+    parser.add_argument('--start_epoch', default=0, type=int, metavar='N',
+                    help='manual epoch number (useful on restarts)')                    
+                                        
     parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet18',
                     choices=model_names,
                     help='model architecture: ' +
@@ -170,20 +176,35 @@ def train(gpu, args):
     
     torch.cuda.set_device(gpu)
     model.cuda(gpu)
-    batch_size = 256
+    train_batch_size = 256
+    val_batch_size = 64
+    best_acc1 = 0
     
     # define loss function (criterion) and optimizer
     criterion = nn.CrossEntropyLoss().cuda(gpu)
     #criterion = LabelSmoothingCrossEntropy(reduction='sum').cuda(gpu)
     
-    
-    
+    if args.resume:
+        if os.path.isfile(args.resume):
+            loc = 'cuda:{}'.format(gpu)
+            checkpoint = torch.load(args.resume, map_location=loc)
+            args.start_epoch = checkpoint['epoch']
+            best_acc1 = checkpoint['best_acc1']
+           
+            model.load_state_dict(checkpoint['state_dict'])
+            optimizer.load_state_dict(checkpoint['optimizer'])
+            print("=> loaded checkpoint '{}' (epoch {})"
+                  .format(args.resume, checkpoint['epoch']))
+        else:
+            print("=> no checkpoint found at '{}'".format(args.resume))
+            
+    cudnn.benchmark = True
     
     train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset,
                                                                     num_replicas=args.world_size,
                                                                     rank=rank)
     train_loader = torch.utils.data.DataLoader(dataset=train_dataset,
-                                               batch_size=batch_size,
+                                               batch_size=train_batch_size,
                                                shuffle=False,
                                                num_workers=6,
                                                pin_memory=True,
@@ -193,7 +214,7 @@ def train(gpu, args):
                                                                     num_replicas=args.world_size,
                                                                     rank=rank)
     val_loader = torch.utils.data.DataLoader(dataset=val_dataset,
-                                               batch_size=batch_size,
+                                               batch_size=val_batch_size,
                                                shuffle=False,
                                                num_workers=6,
                                                pin_memory=True,
@@ -215,13 +236,12 @@ def train(gpu, args):
     start = datetime.now()
     total_train_step = len(train_loader)
     total_val_step = len(val_loader)
-    best_acc1 = 0
     
     #for epoch in range(args.epochs):
 
     #########
     #########
-    for epoch in range(args.epochs):
+    for epoch in range(args.start_epoch, args.epochs):
         #losses = AverageMeter('Loss', ':.4e')
         top1 = AverageMeter('Acc@1', ':6.2f')
         top5 = AverageMeter('Acc@5', ':6.2f')
@@ -292,14 +312,14 @@ def train(gpu, args):
             is_best = acc1 > best_acc1
             best_acc1 = max(acc1, best_acc1)    
             
-            if rank == 0:
-                save_checkpoint({
+           
+            save_checkpoint({
                       'epoch': epoch + 1,
                       'arch': args.arch, 	
                       'state_dict': model.state_dict(),
                       'best_acc1': best_acc1,
                       'optimizer' : optimizer.state_dict(),
-                }, is_best)
+            }, is_best)
             
         model.train()
         if gpu == 0:
