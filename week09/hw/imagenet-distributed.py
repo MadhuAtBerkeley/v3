@@ -56,11 +56,35 @@ def main():
                         help='number of total epochs to run')
     args = parser.parse_args()
     args.world_size = args.gpus * args.nodes
-    os.environ['MASTER_ADDR'] = '34.208.46.180'
+    os.environ['MASTER_ADDR'] = '54.214.114.0' #'34.208.46.180'
     os.environ['MASTER_PORT'] = '8888'
     mp.spawn(train, nprocs=args.gpus, args=(args,))
 
 
+import torch.nn.functional as F
+
+def linear_combination(x, y, epsilon):
+    return epsilon * x + (1 - epsilon) * y
+
+
+def reduce_loss(loss, reduction='mean'):
+    return loss.mean() if reduction == 'mean' else loss.sum() if reduction == 'sum' else loss
+
+
+class LabelSmoothingCrossEntropy(torch.nn.Module):
+    def __init__(self, epsilon: float = 0.1, reduction='mean'):
+        super().__init__()
+        self.epsilon = epsilon
+        self.reduction = reduction
+
+    def forward(self, preds, target):
+        n = preds.size()[-1]
+        log_preds = F.log_softmax(preds, dim=-1)
+        loss = reduce_loss(-log_preds.sum(dim=-1), self.reduction)
+        nll = F.nll_loss(log_preds, target, reduction=self.reduction)
+        return linear_combination(loss / n, nll, self.epsilon)
+        
+        
 class AverageMeter(object):
     """Computes and stores the average and current value"""
     def __init__(self, name, fmt=':f'):
@@ -130,9 +154,11 @@ def train(gpu, args):
     model = models.resnet18(pretrained=False)
     torch.cuda.set_device(gpu)
     model.cuda(gpu)
-    batch_size = 128
+    batch_size = 256
+    
     # define loss function (criterion) and optimizer
-    criterion = nn.CrossEntropyLoss().cuda(gpu)
+    #criterion = nn.CrossEntropyLoss().cuda(gpu)
+    criterion = LabelSmoothingCrossEntropy(reduction='sum').cuda(gpu)
     
     
     
