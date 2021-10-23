@@ -157,8 +157,8 @@ def train(gpu, args):
     batch_size = 256
     
     # define loss function (criterion) and optimizer
-    #criterion = nn.CrossEntropyLoss().cuda(gpu)
-    criterion = LabelSmoothingCrossEntropy(reduction='sum').cuda(gpu)
+    criterion = nn.CrossEntropyLoss().cuda(gpu)
+    #criterion = LabelSmoothingCrossEntropy(reduction='sum').cuda(gpu)
     
     
     
