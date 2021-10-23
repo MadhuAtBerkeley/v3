@@ -1,5 +1,25 @@
 (pytorch_p37) ubuntu@ip-172-31-6-102:~/work/v3/week09/hw$ python imagenet-distributed.py  -n 2 -g 1 -nr 1 --epochs 6
 => creating model 'resnet18'
+Selected optimization level O2:  FP16 training with FP32 batchnorm and FP32 master weights.
+
+Defaults for this optimization level are:
+enabled                : True
+opt_level              : O2
+cast_model_type        : torch.float16
+patch_torch_functions  : False
+keep_batchnorm_fp32    : True
+master_weights         : True
+loss_scale             : dynamic
+Processing user overrides (additional kwargs that are not None)...
+After processing overrides, optimization options are:
+enabled                : True
+opt_level              : O2
+cast_model_type        : torch.float16
+patch_torch_functions  : False
+keep_batchnorm_fp32    : True
+master_weights         : True
+loss_scale             : dynamic
+
 Epoch: [0][  99/2503]	Loss 6.6324e+00 (6.8461e+00)	Acc@1   0.78 (  0.49)	Acc@5   3.12 (  1.84)
 Epoch: [0][ 199/2503]	Loss 6.3069e+00 (6.6406e+00)	Acc@1   1.56 (  0.84)	Acc@5   5.47 (  3.08)
 Epoch: [0][ 299/2503]	Loss 6.0292e+00 (6.4701e+00)	Acc@1   1.95 (  1.20)	Acc@5   8.20 (  4.32)
