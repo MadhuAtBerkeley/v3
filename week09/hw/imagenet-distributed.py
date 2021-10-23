@@ -6,6 +6,7 @@ import argparse
 import torch.multiprocessing as mp
 import torchvision
 import torchvision.transforms as transforms
+from torch.utils.tensorboard import SummaryWriter
 import torch
 import torch.nn as nn
 import torchvision.models as models
@@ -81,29 +82,7 @@ def main():
     mp.spawn(train, nprocs=args.gpus, args=(args,))
 
 
-import torch.nn.functional as F
 
-def linear_combination(x, y, epsilon):
-    return epsilon * x + (1 - epsilon) * y
-
-
-def reduce_loss(loss, reduction='mean'):
-    return loss.mean() if reduction == 'mean' else loss.sum() if reduction == 'sum' else loss
-
-
-class LabelSmoothingCrossEntropy(torch.nn.Module):
-    def __init__(self, epsilon: float = 0.1, reduction='mean'):
-        super().__init__()
-        self.epsilon = epsilon
-        self.reduction = reduction
-
-    def forward(self, preds, target):
-        n = preds.size()[-1]
-        log_preds = F.log_softmax(preds, dim=-1)
-        loss = reduce_loss(-log_preds.sum(dim=-1), self.reduction)
-        nll = F.nll_loss(log_preds, target, reduction=self.reduction)
-        return linear_combination(loss / n, nll, self.epsilon)
-        
         
 class AverageMeter(object):
     """Computes and stores the average and current value"""
@@ -176,6 +155,8 @@ def train(gpu, args):
     print("=> creating model '{}'".format(args.arch))
     model = models.__dict__[args.arch]()
     #model = models.resnet18(pretrained=False)
+    
+    writer = SummaryWriter("imagenet_log")
     
     torch.cuda.set_device(gpu)
     model.cuda(gpu)
@@ -254,6 +235,7 @@ def train(gpu, args):
         train_sampler.set_epoch(epoch)        
         losses = AverageMeter('Loss', ':.4e')
         progress = ProgressMeter(len(train_loader),[losses, top1, top5], prefix="Epoch: [{}]".format(epoch))
+        model.train()        
         
     	  #train_sampler.set_epoch(epoch)
         for i, (images, labels) in enumerate(train_loader):
@@ -269,6 +251,8 @@ def train(gpu, args):
                 losses.update(loss.item(), images.size(0))
                 top1.update(acc1[0], images.size(0))
                 top5.update(acc5[0], images.size(0))
+                writer.add_scalar('Loss/train', loss.item(), epoch)
+                writer.add_scalar('Accuracy/train', acc1[0], epoch)
 
             # Backward and optimize
             optimizer.zero_grad()
@@ -280,6 +264,9 @@ def train(gpu, args):
             optimizer.step()
             
             scheduler.step()
+            
+            
+            
             
             if (i + 1) % 100 == 0 and gpu == 0:
                 #print('Epoch [{}/{}], Step [{}/{}], Train Loss: {:.4f}'.format(epoch + 1, args.epochs, i + 1, total_train_step,loss.item()))
@@ -309,6 +296,8 @@ def train(gpu, args):
                 losses.update(loss.item(), images.size(0))
                 top1.update(acc1[0], images.size(0))
                 top5.update(acc5[0], images.size(0))
+                writer.add_scalar('Loss/Val', loss.item(), epoch)      
+                writer.add_scalar('Accuracy/Val', acc1[0], epoch)             
             
             if (i + 1) % 100 == 0 and gpu == 0:
                 #print('Epoch [{}/{}], Step [{}/{}], Val Loss: {:.4f}'.format(epoch + 1, args.epochs, i + 1, total_val_step,loss.item()))
@@ -327,12 +316,15 @@ def train(gpu, args):
                       'optimizer' : optimizer.state_dict(),
             }, is_best)
             
-        model.train()
+        #model.train()
+        
+        writer.flush()
         if gpu == 0:
             print(' * Val Acc@1 {top1.avg:.3f} Val Acc@5 {top5.avg:.3f}'.format(top1=top1, top5=top5))
                                                                                
     if gpu == 0:
         print("Training complete in: " + str(datetime.now() - start))
+    writer.flush()    
 
 
 if __name__ == '__main__':
