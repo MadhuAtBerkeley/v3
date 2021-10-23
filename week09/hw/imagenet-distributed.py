@@ -11,8 +11,8 @@ import torch.nn as nn
 import torchvision.models as models
 import torch.distributed as dist
 import torch.backends.cudnn as cudnn
-#from apex.parallel import DistributedDataParallel as DDP
-#from apex import amp
+from apex.parallel import DistributedDataParallel as DDP
+from apex import amp
 from torch.optim.lr_scheduler import OneCycleLR
 
 
@@ -226,14 +226,17 @@ def train(gpu, args):
     optimizer = torch.optim.SGD(model.parameters(), lr=LR, momentum=0.9, weight_decay=WEIGHT_DECAY)
     
     # Use Super Convergence                                                                           
-    scheduler = OneCycleLR(optimizer, max_lr=1.0, steps_per_epoch=len(train_loader), epochs=args.epochs)
+    #scheduler = OneCycleLR(optimizer, max_lr=1.0, steps_per_epoch=len(train_loader), epochs=args.epochs)
     
     # Wrap the model
-    model = nn.parallel.DistributedDataParallel(model, device_ids=[gpu])
+    #model = nn.parallel.DistributedDataParallel(model, device_ids=[gpu])
     
     
-    #model, optimizer = amp.initialize(model, optimizer, opt_level='O2')
-    #model = DDP(model)
+    model, optimizer = amp.initialize(model, optimizer, opt_level='O2')
+    model = DDP(model)
+    
+    # Use Super Convergence                                                                           
+    scheduler = OneCycleLR(optimizer, max_lr=1.0, steps_per_epoch=len(train_loader), epochs=args.epochs)
     
     
     start = datetime.now()
@@ -270,10 +273,10 @@ def train(gpu, args):
             # Backward and optimize
             optimizer.zero_grad()
             
-            #with amp.scale_loss(loss, optimizer) as scaled_loss:
-            #    scaled_loss.backward()
+            with amp.scale_loss(loss, optimizer) as scaled_loss:
+                scaled_loss.backward()
                 
-            loss.backward()
+            #loss.backward()
             optimizer.step()
             
             scheduler.step()
