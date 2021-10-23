@@ -68,7 +68,7 @@ def main():
                                                 
     args = parser.parse_args()
     args.world_size = args.gpus * args.nodes
-    os.environ['MASTER_ADDR'] = '54.214.114.0' #'34.208.46.180'
+    os.environ['MASTER_ADDR'] = '34.214.54.102'
     os.environ['MASTER_PORT'] = '8888'
     mp.spawn(train, nprocs=args.gpus, args=(args,))
 
@@ -292,13 +292,14 @@ def train(gpu, args):
             is_best = acc1 > best_acc1
             best_acc1 = max(acc1, best_acc1)    
             
-            save_checkpoint({
+            if rank == 0:
+                save_checkpoint({
                       'epoch': epoch + 1,
                       'arch': args.arch, 	
                       'state_dict': model.state_dict(),
                       'best_acc1': best_acc1,
                       'optimizer' : optimizer.state_dict(),
-            }, is_best)
+                }, is_best)
             
         model.train()
         if gpu == 0:
