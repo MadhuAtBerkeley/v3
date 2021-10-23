@@ -324,7 +324,7 @@ def train(gpu, args):
                                                                                
     if gpu == 0:
         print("Training complete in: " + str(datetime.now() - start))
-    writer.flush()    
+    writer.close()    
 
 
 if __name__ == '__main__':
