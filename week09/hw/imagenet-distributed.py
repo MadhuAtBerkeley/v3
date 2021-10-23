@@ -1,5 +1,6 @@
 import os
 import shutil
+import random
 from datetime import datetime
 import argparse
 import torch.multiprocessing as mp
@@ -9,6 +10,7 @@ import torch
 import torch.nn as nn
 import torchvision.models as models
 import torch.distributed as dist
+import torch.backends.cudnn as cudnn
 #from apex.parallel import DistributedDataParallel as DDP
 #from apex import amp
 from torch.optim.lr_scheduler import OneCycleLR
@@ -168,6 +170,7 @@ class ProgressMeter(object):
 def train(gpu, args):
     rank = args.nr * args.gpus + gpu
     dist.init_process_group(backend='nccl', init_method='env://', world_size=args.world_size, rank=rank)
+    random.seed(0)
     torch.manual_seed(0)
     
     print("=> creating model '{}'".format(args.arch))
