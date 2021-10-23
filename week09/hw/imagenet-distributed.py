@@ -54,6 +54,12 @@ def main():
                         help='ranking within the nodes')
     parser.add_argument('--epochs', default=2, type=int, metavar='N',
                         help='number of total epochs to run')
+    parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet18',
+                    choices=model_names,
+                    help='model architecture: ' +
+                        ' | '.join(model_names) +
+                        ' (default: resnet18)')
+                                                
     args = parser.parse_args()
     args.world_size = args.gpus * args.nodes
     os.environ['MASTER_ADDR'] = '54.214.114.0' #'34.208.46.180'
@@ -151,7 +157,11 @@ def train(gpu, args):
     rank = args.nr * args.gpus + gpu
     dist.init_process_group(backend='nccl', init_method='env://', world_size=args.world_size, rank=rank)
     torch.manual_seed(0)
-    model = models.resnet18(pretrained=False)
+    
+    print("=> creating model '{}'".format(args.arch))
+    model = models.__dict__[args.arch]()
+    #model = models.resnet18(pretrained=False)
+    
     torch.cuda.set_device(gpu)
     model.cuda(gpu)
     batch_size = 256
@@ -278,6 +288,7 @@ def train(gpu, args):
             
             save_checkpoint({
                       'epoch': epoch + 1,
+                      'arch': args.arch, 	
                       'state_dict': model.state_dict(),
                       'best_acc1': best_acc1,
                       'optimizer' : optimizer.state_dict(),
