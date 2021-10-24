@@ -223,6 +223,8 @@ def train(gpu, args):
     start = datetime.now()
     total_train_step = len(train_loader)
     total_val_step = len(val_loader)
+    train_log_count = 0
+    val_log_count = 0    
     
     #for epoch in range(args.epochs):
 
@@ -251,9 +253,7 @@ def train(gpu, args):
                 losses.update(loss.item(), images.size(0))
                 top1.update(acc1[0], images.size(0))
                 top5.update(acc5[0], images.size(0))
-                writer.add_scalar('Loss/train', loss.item(), epoch)
-                writer.add_scalar('Accuracy/train', acc1[0], epoch)
-
+                
             # Backward and optimize
             optimizer.zero_grad()
             
@@ -271,6 +271,10 @@ def train(gpu, args):
             if (i + 1) % 100 == 0 and gpu == 0:
                 #print('Epoch [{}/{}], Step [{}/{}], Train Loss: {:.4f}'.format(epoch + 1, args.epochs, i + 1, total_train_step,loss.item()))
                 progress.display(i)
+                writer.add_scalar('Loss/train', loss.item(), train_log_count)
+                writer.add_scalar('Accuracy/train', acc1[0], train_log_count)
+                train_log_count += 1
+
         if(gpu == 0):
             print(' * Train Acc@1 {top1.avg:.3f} Train Acc@5 {top5.avg:.3f}'.format(top1=top1, top5=top5)) 
             
@@ -296,12 +300,14 @@ def train(gpu, args):
                 losses.update(loss.item(), images.size(0))
                 top1.update(acc1[0], images.size(0))
                 top5.update(acc5[0], images.size(0))
-                writer.add_scalar('Loss/Val', loss.item(), epoch)      
-                writer.add_scalar('Accuracy/Val', acc1[0], epoch)             
+                          
             
             if (i + 1) % 100 == 0 and gpu == 0:
                 #print('Epoch [{}/{}], Step [{}/{}], Val Loss: {:.4f}'.format(epoch + 1, args.epochs, i + 1, total_val_step,loss.item()))
                 progress.display(i)
+                writer.add_scalar('Loss/Val', loss.item(), val_log_count)      
+                writer.add_scalar('Accuracy/Val', acc1[0], val_log_count)   
+                val_log_count += 1
                 
                 
             is_best = acc1 > best_acc1
