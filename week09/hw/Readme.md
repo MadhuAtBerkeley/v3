@@ -1,16 +1,27 @@
 # Homework 9 - Distributed training
 
-This is a graded homework
-
-Due: before week 10 begins
 
 In this homework, we are focused on aspects of multi-node and multi-gpu (mnmg) model training.
 The high level idea is to practice running multi-node training by adapting the code we develop in homework 5 (imagenet training from random weights) to run on two GPU nodes instead of one.
 
-Notes:
-* You will need to provision two g4dn.2xlarge instances. Each has 8 vCPUs, so you'll need to the ability (limit) to provision 16 vCPUs. 
-* We recommend adding 400GB of storage space under /root so that you can comfortably work with imagenet2012 (below)
-* You'll need to [re-] download imagenet2012 (we'll provide links in class again) and unpack it on each machine -- e.g. under /data/
+# Summary of Implementation
+
+## 1. EC2 Instances
+* Two g4dn.2xlarge instances - each has 8 vCPUs.
+* Deep Learning AMI (Ubuntu 18.04) with 500GB of storage space to work with imagenet2012 downloaded to /data/
+* Activate pytorch environment - `conda activate pytorch_latest_p37`
+* Download apex - `git clone https://github.com/NVIDIA/apex` and install using `pip install -v --disable-pip-version-check --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" ./` 
+* Install Tensorboard `conda install -c conda-forge tensorboard`
+
+## 2. Pytorch implementation of Imagenet classifier
+* Use Apex for AMP 
+* ` model, optimizer = amp.initialize(model, optimizer, opt_level='O2')`
+* opt_level=O2 casts the model to FP16, keeps batchnorms in FP32, maintains master weights in FP32, and implements dynamic loss scaling by default
+* `model = apex.parallel.DistributedDataParallel(model)`
+
+## 3.Single node pytorch DDP program
+*  `python imagenet-distributed.py  -n 1 -g 1 -nr 0 --epochs 2`
+*  
 * You'll need to demonstrate your command of [PyTorch DDP](https://pytorch.org/tutorials/beginner/dist_overview.html)
 * Apply [PyTorch native AMP](https://pytorch.org/docs/stable/amp.html)
 * Document your run using [Tensorboard](https://www.tensorflow.org/tensorboard) or [Weights and Biases](https://wandb.ai/home) 
