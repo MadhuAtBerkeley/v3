@@ -14,10 +14,12 @@ The high level idea is to practice running multi-node training by adapting the c
 * Install Tensorboard `conda install -c conda-forge tensorboard`
 
 ## 2. Pytorch implementation of Imagenet classifier
-* Use Apex for AMP 
-* ` model, optimizer = amp.initialize(model, optimizer, opt_level='O2')`
+* Use Apex for AMP ` model, optimizer = amp.initialize(model, optimizer, opt_level='O2')` and `model = apex.parallel.DistributedDataParallel(model)`
 * opt_level=O2 casts the model to FP16, keeps batchnorms in FP32, maintains master weights in FP32, and implements dynamic loss scaling by default
-* `model = apex.parallel.DistributedDataParallel(model)`
+* Scaling both forward pass and gradients using 
+ `with amp.scale_loss(loss, optimizer) as scaled_loss:
+                scaled_loss.backward()`
+* Multiprocessing is handled by `import torch.multiprocessing` and `spawn` is used to share CUDA tensors between processes.
 
 ## 3.Single node pytorch DDP program
 *  `python imagenet-distributed.py  -n 1 -g 1 -nr 0 --epochs 2`
