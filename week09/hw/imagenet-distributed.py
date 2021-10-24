@@ -29,6 +29,7 @@ WEIGHT_DECAY = 3e-5
 # https://w251hw05.s3.us-west-1.amazonaws.com/ILSVRC2012_img_val.tar
 # https://w251hw05.s3.us-west-1.amazonaws.com/ILSVRC2012_img_train.tar
 # python mnist-distributed.py  -n 1 -g 1 -nr 0
+#https://tensorboard.dev/experiment/68QRpDH4Reue0RMKb062Tw/#scalars
 
 imagenet_mean_RGB = [0.47889522, 0.47227842, 0.43047404]
 imagenet_std_RGB = [0.229, 0.224, 0.225]
