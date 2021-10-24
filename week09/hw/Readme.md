@@ -6,6 +6,8 @@ The high level idea is to practice running multi-node training by adapting the c
 
 # Summary of Implementation
 
+The implementation is at https://github.com/MadhuAtBerkeley/v3/edit/main/week09/hw
+
 ## 1. EC2 Instances
 * Two g4dn.2xlarge instances - each has 8 vCPUs.
 * Deep Learning AMI (Ubuntu 18.04) with 500GB of storage space to work with imagenet2012 downloaded to /data/
@@ -59,8 +61,9 @@ Epoch: [1][699/782]	Loss 2.2460e+00 (2.2532e+00)	Acc@1  51.56 ( 49.06)	Acc@5  75
  * Val Acc@1 49.090 Val Acc@5 73.862. 
 Training complete in: 1:30:40.328945. 
 ```
+The complete log at https://github.com/MadhuAtBerkeley/v3/blob/main/week09/hw/train_log_single_node.txt
 
-## 3.Dual node pytorch DDP program
+## 4.Dual node pytorch DDP program
 *  Master - `python imagenet-distributed.py  -n 2 -g 1 -nr 0 --epochs 2` and worker - `python imagenet-distributed.py  -n 2 -g 1 -nr 1 --epochs 2`
 *  Performance and timing after two epochs
 ```
@@ -70,16 +73,38 @@ Epoch: [1][299/391]	Loss 2.3966e+00 (2.3767e+00)	Acc@1  43.75 ( 46.46)	Acc@5  71
  * Val Acc@1 46.780 Val Acc@5 72.148
 Training complete in: 0:48:45.460161
 ```
+Complete log at https://github.com/MadhuAtBerkeley/v3/blob/main/week09/hw/train_log_dist_master.txt
 
-* You'll need to demonstrate your command of [PyTorch DDP](https://pytorch.org/tutorials/beginner/dist_overview.html)
-* Apply [PyTorch native AMP](https://pytorch.org/docs/stable/amp.html)
-* Document your run using [Tensorboard](https://www.tensorflow.org/tensorboard) or [Weights and Biases](https://wandb.ai/home) 
-* Hopefully, demonstrate that your training is ~2x faster than on a single GPU machine.
+## 5.Performance comparison
+* Single node took 1:30 hours and Dual node took 0.48 minutes
+* It can be seen that each node processed 5005 training batches in single node case while number of batches were split by half - to 2503 in dual node case.
+* If trained for 6 epochs, dual node achieved 60% top-1 accuracy in 3 hours 18 minutes
 
-Tips:
-* You could trt using g4dn.xlarge, but in our experience, they just don't have enough CPUs to keep the GPU fed, so the results will be slow.
-* Ideally, you should be able to use EFS.  However, one must ensure that performance is good-- and we've seen issues.
-* There is no need to train to the end (e.g. 90 epochs); it would be sufficient to run the training for 1-2 epochs, time it, and compare the results against a run on a sinle GPU instance.
-* Please monitor the GPU utilization using nvidia-smi; as long as both GPUs are > 95% utilized, you are doing fine.
+```
+Epoch: [5][2499/2503]	Loss 1.9711e+00 (2.0689e+00)	Acc@1  56.64 ( 53.57)	Acc@5  79.30 ( 76.53)
+ * Train Acc@1 53.568 Train Acc@5 76.528
+Epoch: [5][ 99/391]	Loss 1.3704e+00 (1.6763e+00)	Acc@1  67.19 ( 60.36)	Acc@5  87.50 ( 82.58)
+Epoch: [5][199/391]	Loss 1.3637e+00 (1.6890e+00)	Acc@1  75.00 ( 59.87)	Acc@5  85.94 ( 82.58)
+Epoch: [5][299/391]	Loss 1.6216e+00 (1.6860e+00)	Acc@1  60.94 ( 60.26)	Acc@5  84.38 ( 82.78)
+ * Val Acc@1 60.012 Val Acc@5 82.660
+Training complete in: 3:18:19.927112
+```
+
+https://github.com/MadhuAtBerkeley/v3/blob/main/week09/hw/train_log_worker.txt
+
+## 6 Tensorboard Visualization
+* Following code changes were added
+```
+writer = SummaryWriter("imagenet_log")
+writer.add_scalar('Loss/train', loss.item(), train_log_count)
+writer.add_scalar('Accuracy/train', acc1[0], train_log_count)
+writer.add_scalar('Loss/Val', loss.item(), val_log_count)      
+writer.add_scalar('Accuracy/Val', acc1[0], val_log_count)
+writer.flush()
+writer.close()
+
+```
+* `tensorboard dev upload --logdir 'imagenet_log'` was used to generate tensorboard log and share the results with others.
+* The results are at https://tensorboard.dev/experiment/68QRpDH4Reue0RMKb062Tw/#scalars
 
 
