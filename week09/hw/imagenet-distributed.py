@@ -258,6 +258,7 @@ def train(gpu, args):
             # Backward and optimize
             optimizer.zero_grad()
             
+            # Scaling Both forward pass and gradients
             with amp.scale_loss(loss, optimizer) as scaled_loss:
                 scaled_loss.backward()
                 
