@@ -6,13 +6,14 @@ import argparse
 import torch.multiprocessing as mp
 import torchvision
 import torchvision.transforms as transforms
+from torch.utils.tensorboard import SummaryWriter
 import torch
 import torch.nn as nn
 import torchvision.models as models
 import torch.distributed as dist
 import torch.backends.cudnn as cudnn
-#from apex.parallel import DistributedDataParallel as DDP
-#from apex import amp
+from apex.parallel import DistributedDataParallel as DDP
+from apex import amp
 from torch.optim.lr_scheduler import OneCycleLR
 
 
@@ -28,6 +29,7 @@ WEIGHT_DECAY = 3e-5
 # https://w251hw05.s3.us-west-1.amazonaws.com/ILSVRC2012_img_val.tar
 # https://w251hw05.s3.us-west-1.amazonaws.com/ILSVRC2012_img_train.tar
 # python mnist-distributed.py  -n 1 -g 1 -nr 0
+#https://tensorboard.dev/experiment/68QRpDH4Reue0RMKb062Tw/#scalars
 
 imagenet_mean_RGB = [0.47889522, 0.47227842, 0.43047404]
 imagenet_std_RGB = [0.229, 0.224, 0.225]
@@ -81,29 +83,7 @@ def main():
     mp.spawn(train, nprocs=args.gpus, args=(args,))
 
 
-import torch.nn.functional as F
 
-def linear_combination(x, y, epsilon):
-    return epsilon * x + (1 - epsilon) * y
-
-
-def reduce_loss(loss, reduction='mean'):
-    return loss.mean() if reduction == 'mean' else loss.sum() if reduction == 'sum' else loss
-
-
-class LabelSmoothingCrossEntropy(torch.nn.Module):
-    def __init__(self, epsilon: float = 0.1, reduction='mean'):
-        super().__init__()
-        self.epsilon = epsilon
-        self.reduction = reduction
-
-    def forward(self, preds, target):
-        n = preds.size()[-1]
-        log_preds = F.log_softmax(preds, dim=-1)
-        loss = reduce_loss(-log_preds.sum(dim=-1), self.reduction)
-        nll = F.nll_loss(log_preds, target, reduction=self.reduction)
-        return linear_combination(loss / n, nll, self.epsilon)
-        
         
 class AverageMeter(object):
     """Computes and stores the average and current value"""
@@ -177,6 +157,8 @@ def train(gpu, args):
     model = models.__dict__[args.arch]()
     #model = models.resnet18(pretrained=False)
     
+    writer = SummaryWriter("imagenet_log")
+    
     torch.cuda.set_device(gpu)
     model.cuda(gpu)
     train_batch_size = 256
@@ -226,19 +208,24 @@ def train(gpu, args):
     optimizer = torch.optim.SGD(model.parameters(), lr=LR, momentum=0.9, weight_decay=WEIGHT_DECAY)
     
     # Use Super Convergence                                                                           
-    scheduler = OneCycleLR(optimizer, max_lr=1.0, steps_per_epoch=len(train_loader), epochs=args.epochs)
+    #scheduler = OneCycleLR(optimizer, max_lr=1.0, steps_per_epoch=len(train_loader), epochs=args.epochs)
     
     # Wrap the model
-    model = nn.parallel.DistributedDataParallel(model, device_ids=[gpu])
+    #model = nn.parallel.DistributedDataParallel(model, device_ids=[gpu])
     
     
-    #model, optimizer = amp.initialize(model, optimizer, opt_level='O2')
-    #model = DDP(model)
+    model, optimizer = amp.initialize(model, optimizer, opt_level='O2')
+    model = DDP(model)
+    
+    # Use Super Convergence                                                                           
+    scheduler = OneCycleLR(optimizer, max_lr=1.0, steps_per_epoch=len(train_loader), epochs=args.epochs)
     
     
     start = datetime.now()
     total_train_step = len(train_loader)
     total_val_step = len(val_loader)
+    train_log_count = 0
+    val_log_count = 0    
     
     #for epoch in range(args.epochs):
 
@@ -251,6 +238,7 @@ def train(gpu, args):
         train_sampler.set_epoch(epoch)        
         losses = AverageMeter('Loss', ':.4e')
         progress = ProgressMeter(len(train_loader),[losses, top1, top5], prefix="Epoch: [{}]".format(epoch))
+        model.train()        
         
     	  #train_sampler.set_epoch(epoch)
         for i, (images, labels) in enumerate(train_loader):
@@ -266,21 +254,28 @@ def train(gpu, args):
                 losses.update(loss.item(), images.size(0))
                 top1.update(acc1[0], images.size(0))
                 top5.update(acc5[0], images.size(0))
-
+                
             # Backward and optimize
             optimizer.zero_grad()
             
-            #with amp.scale_loss(loss, optimizer) as scaled_loss:
-            #    scaled_loss.backward()
+            with amp.scale_loss(loss, optimizer) as scaled_loss:
+                scaled_loss.backward()
                 
-            loss.backward()
+            #loss.backward()
             optimizer.step()
             
             scheduler.step()
             
+            
+            
+            
             if (i + 1) % 100 == 0 and gpu == 0:
                 #print('Epoch [{}/{}], Step [{}/{}], Train Loss: {:.4f}'.format(epoch + 1, args.epochs, i + 1, total_train_step,loss.item()))
                 progress.display(i)
+                writer.add_scalar('Loss/train', loss.item(), train_log_count)
+                writer.add_scalar('Accuracy/train', acc1[0], train_log_count)
+                train_log_count += 1
+
         if(gpu == 0):
             print(' * Train Acc@1 {top1.avg:.3f} Train Acc@5 {top5.avg:.3f}'.format(top1=top1, top5=top5)) 
             
@@ -306,10 +301,14 @@ def train(gpu, args):
                 losses.update(loss.item(), images.size(0))
                 top1.update(acc1[0], images.size(0))
                 top5.update(acc5[0], images.size(0))
+                          
             
             if (i + 1) % 100 == 0 and gpu == 0:
                 #print('Epoch [{}/{}], Step [{}/{}], Val Loss: {:.4f}'.format(epoch + 1, args.epochs, i + 1, total_val_step,loss.item()))
                 progress.display(i)
+                writer.add_scalar('Loss/Val', loss.item(), val_log_count)      
+                writer.add_scalar('Accuracy/Val', acc1[0], val_log_count)   
+                val_log_count += 1
                 
                 
             is_best = acc1 > best_acc1
@@ -324,12 +323,15 @@ def train(gpu, args):
                       'optimizer' : optimizer.state_dict(),
             }, is_best)
             
-        model.train()
+        #model.train()
+        
+        writer.flush()
         if gpu == 0:
             print(' * Val Acc@1 {top1.avg:.3f} Val Acc@5 {top5.avg:.3f}'.format(top1=top1, top5=top5))
                                                                                
     if gpu == 0:
         print("Training complete in: " + str(datetime.now() - start))
+    writer.close()    
 
 
 if __name__ == '__main__':
