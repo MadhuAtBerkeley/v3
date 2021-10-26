@@ -9,37 +9,31 @@ The goal of the homework is to train an image classification network on the Imag
 
 We suggest that you use PyTorch or PyTorch Lightning.  
 
-The lab 6 materials ought to help you prepare for the homework.
-
-### The steps
-The steps are roughly as follows:
-
-1. Procure a virtual machine in AWS - we recommend a T4 GPU and 1 TB of space (e.g. g4dn.2xlarge). Use the Nvidia Deep Learning AMI so that the pre-requisites are pre-installed for you. We recommend using the latest [nvidia pytorch container](https://ngc.nvidia.com/catalog/containers/nvidia:pytorch)
-2. Download the ImageNet dataset to your VM. Please do register at [image-net.org](https://image-net.org/) for all of your future needs. Given the slowness of download via this web site, however, we have downloaded a copy of ImageNet for you and will distribute it in class. (FYI - some students found [this link](https://github.com/facebookarchive/fb.resnet.torch/blob/master/INSTALL.md#download-the-imagenet-dataset) helpful for downloading)
-3. Prepare the dataset:
-  * create train and val subdirectories and move the train and val tar files to their respective locations
-  * untar both files and remove them as you no longer neeed them
-  * Use the following [shell script](https://raw.githubusercontent.com/soumith/imagenetloader.torch/master/valprep.sh) to process your val directory. It simply moves your validation set into proper subfolders
-  * When you untarred the train file, it created a large number (1000) of tar files, one for each class.  You will need to create a separate directory for each of class , move the tar file there, untar the file and remove it. This should be a one liner shell script but we'll let you have fun with it!
-  * Make sure that under the train and val folders, there is one directory for class and that the samples for that class are under that directory
-5. Adapt the code we discuss in the labs to the training of imagenet. Make sure the number of classes and image sizes are correct. Make sure the transforms are correct.
-6. Start training && observe progress !
 
 
-### Key decisions to consider
-* Which architecture to choose? Here's what [Torchvision has](https://pytorch.org/vision/stable/models.html) but obviously you're not limited to that if you want to try something newer.
-* Which optimizer to use? For this homework we recommend [SGD](https://pytorch.org/vision/stable/models.html) for simplicity.
-* What should the learning rate be? This is where we need to check our sources / see how others trained the model.
-* Should we change the learning rate while training? Our suggestion would be to use something simple: e.g. drop it 10x every 33% of training time.
-* When to stop training? We conscuously set the bar at 60% Top1 (on the validation set) so that you may not need to choose a very heavy model and / or train it forever.
+# Summary of Implementation
 
-### Please note
-* Please do not attempt to spend more than 3 days training your model on a single T4 GPU. If your estimate gives you a longer training time, pick a different approach.
-* You might want to prototype your work using Jupyter and then submit it using [papermill](https://papermill.readthedocs.io/en/latest/usage-cli.html)
+The implementation is at https://github.com/MadhuAtBerkeley/v3/edit/main/week05/hw
 
-### Extra credit
-Create your own model architecture. You can draw your inspiration from the [PyTorch Resnet github](https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py), for instance.
+## 1. EC2 Instances
+* One g4dn.2xlarge instances with 8 vCPUs.
+* Deep Learning AMI (Ubuntu 18.04) with 300GB of storage space to work with imagenet2012 downloaded to /data/
+* Activate pytorch environment - `conda activate pytorch_latest_p37`
+* Download apex - `git clone https://github.com/NVIDIA/apex` and install using `pip install -v --disable-pip-version-check --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" ./` 
 
 
-### To turn in
-Please turn in your training logs. They should obviously display that you have achieved the Top 1 accuracy.  Also, please save / download the trained weights to your jetson device for evaluation later.
+## 2 Key decisions to consider
+* Which architecture to choose? Ans: Resnet18()
+* Which optimizer to use? SGD was used `optimizer=torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=3e-5) `
+* Super convergence with `scheduler = OneCycleLR(optimizer, max_lr=1.0, steps_per_epoch=len(train_loader), epochs=args.epochs)`.
+* Should we change the learning rate while training? Ans:  Super converegence with OneCycleLR() maxLR = 1.0, min_LR = 0.1 and CosineAnnealing
+
+
+### 3. To turn in
+Training logs with achieved the Top 1 accuracy is below.. 60% Top 1 Accuracy in 6 epochs with super convergence
+```
+Epoch: [5][5000/5005]	Time  1.034 ( 2.526)	Data  0.586 ( 1.589)	Loss 1.839e+00 (2.142e+00)	Acc@1  57.81 ( 52.10)	Acc@5  76.95 ( 75.40)
+Test: [700/782]	Time  1.275 ( 0.634)	Loss 1.8844e+00 (1.6804e+00)	Acc@1  57.81 ( 59.99)	Acc@5  81.25 ( 82.78)
+ * Acc@1 60.192 Acc@5 82.816
+lr: [4.005583818221238e-06]
+```
