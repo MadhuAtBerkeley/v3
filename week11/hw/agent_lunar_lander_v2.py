@@ -8,6 +8,7 @@ import gym
 from gym import spaces
 from gym.utils import seeding
 import skvideo.io
+import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from collections import deque
@@ -183,7 +184,7 @@ class DQN:
     def predict(self, current_state):
         return self.policy_model.predict(current_state)
 
-    def train(self, num_episodes=2000, can_stop=True):
+    def train(self, num_episodes=2000, can_stop=True, writer=None):
 
         frames = []
 
@@ -202,12 +203,10 @@ class DQN:
             while not done:
 
                 if episode % 50 == 0:
-                   frame = env.render(mode='rgb_array')
-                   fname = "/tmp/videos/episode"+str(episode)+".mp4"
-                   skvideo.io.vwrite(fname, np.array(frame))
+                    frame = env.render(mode='rgb_array')
 
-                #if episode % 50 == 0:
-                #   frames.append(frame)                    
+                if episode % 50 == 0:
+                    frames.append(frame)                    
 
 
                 # use epsilon decay to choose the next state
@@ -236,11 +235,11 @@ class DQN:
             self.update_target_model()
 
             # Create a video from every 10th episode
-            #if episode % 50 == 0:
-                #fname = "/tmp/videos/episode"+str(episode)+".mp4"
-                #skvideo.io.vwrite(fname, np.array(frame))
-                #del frames
-                #frames = []
+            if episode % 50 == 0:
+                fname = "./tmp/videos/episode"+str(episode)+".mp4"
+                skvideo.io.vwrite(fname, np.array(frame))
+                del frames
+                frames = []
 
             # Decay the epsilon after each experience completion
             if self.epsilon > self.epsilon_min:
@@ -257,6 +256,16 @@ class DQN:
                 break
             #print(episode, "\t: Episode || Reward: ",reward_for_episode, "\t|| Average Reward: ",last_rewards_mean, "\t epsilon: ", self.epsilon )
             print("Episode: {}, Reward: {:.3f}, Avg Reward :{:.3f}, Epsilon:{:.4f}".format(episode, reward_for_episode,last_rewards_mean, self.epsilon))
+            
+            if(writer != None):
+               with writer.as_default():
+                   tf.summary.scalar('Reward/Train', reward_for_episode, episode)
+                   tf.summary.scalar('Avg-Reward/Train', last_rewards_mean, episode)
+               
+        if(writer != None):      
+           tf.summary.flush(writer=writer)
+            
+        
 
     def update_counter(self):
         self.counter += 1
@@ -288,48 +297,65 @@ if __name__=="__main__":
  
     # initialize the Deep-Q Network model
     model = DQN(env)
+    
+    writer = tf.summary.create_file_writer("./logs/lunar_landing")
 
     # Train the model
-    model.train(training_episodes, True)
+    model.train(training_episodes, True, writer=writer)
 
-    #print("Starting Testing of the trained model...")
+    print("Starting Testing of the trained model...")
 
-    #done = False
-    #frames = []
+    # Run 100 episodes to generate the initial training data
+    num_test_episode = 100
+
+    # number of test runs with a satisfactory number of good landings
+    high_score = 0
+
+    # Create the OpenAI Gym Enironment with LunarLander-v2
+    #env = gym.make("LunarLander-v2")
+    rewards_list = []
+
+    #model = load_model("final_model.h5")
+    done = False
+    frames = []
 
     # Run some test episodes to see how well our model performs
-    #for test_episode in range(num_test_episode):
-    #    current_state = env.reset()
-    #    num_observation_space = env.observation_space.shape[0]
-    #    current_state = np.reshape(current_state, [1, num_observation_space])
-    #    reward_for_episode = 0
-    #    done = False
-    #    while not done:
-#
-#            frame = env.render(mode='rgb_array')
-#            frames.append(frame)
-#
-#            selected_action = np.argmax(model.predict(current_state)[0])
-#            new_state, reward, done, info = env.step(selected_action)
-#            new_state = np.reshape(new_state, [1, num_observation_space])
-#            current_state = new_state
-#            reward_for_episode += reward
-#        rewards_list.append(reward_for_episode)
-#        print(test_episode, "\t: Episode || Reward: ", reward_for_episode)
-#        if reward_for_episode >= 200:
-#            high_score += 1
-#        if test_episode % 10 == 0:
-#            fname = "/tmp/videos/testing_run"+str(test_episode)+".mp4"
-#            skvideo.io.vwrite(fname, np.array(frames))
-#            del frames
-#            frames = []
+    for test_episode in range(num_test_episode):
+        current_state = env.reset()
+        num_observation_space = env.observation_space.shape[0]
+        current_state = np.reshape(current_state, [1, num_observation_space])
+        reward_for_episode = 0
+        done = False
+        while not done:
 
- 
+            if test_episode % 50 == 0:
+                frame = env.render(mode='rgb_array')
+                frames.append(frame)
 
-#    now = datetime.now() # current date and time
-#    rewards_mean = np.mean(rewards_list[-100:])
-#    print("Average Reward: ", rewards_mean )
-#    print("Total tests above 200: ", high_score)
+            selected_action = np.argmax(model.predict(current_state)[0])
+            new_state, reward, done, info = env.step(selected_action)
+            new_state = np.reshape(new_state, [1, num_observation_space])
+            current_state = new_state
+            reward_for_episode += reward
+        rewards_list.append(reward_for_episode)
+        print(test_episode, "\t: Episode || Reward: ", reward_for_episode)
+        if reward_for_episode >= 200:
+            high_score += 1
+        if test_episode % 50 == 0:
+            fname = "./tmp/videos/testing_run"+str(test_episode)+".mp4"
+            skvideo.io.vwrite(fname, np.array(frames))
+            del frames
+            frames = []
+            
+        rewards_mean = np.mean(rewards_list[-100:])    
+        with writer.as_default():    
+            tf.summary.scalar('Reward/Test', reward_for_episode, test_episode)
+            tf.summary.scalar('Avg-Reward/Test', rewards_mean, test_episode)
+       
+    tf.summary.flush(writer=writer)        
+           
 
-    #date_time = now.strftime("%Y%m%d-%H%M%S")
-    model.policy_model.save('/tmp/videos/mymodel.h5')       
+    
+    print("Average Reward: ", rewards_mean )
+    print("Total tests above 200: ", high_score)
+    model.policy_model.save('mymodel.h5')       

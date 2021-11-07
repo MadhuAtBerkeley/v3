@@ -39,6 +39,7 @@ if __name__=="__main__":
     done = False
     frames = []
 
+    writer = tf.summary.create_file_writer("./logs/lunar_landing")
     # Run some test episodes to see how well our model performs
     for test_episode in range(num_test_episode):
         current_state = env.reset()
@@ -66,8 +67,13 @@ if __name__=="__main__":
             skvideo.io.vwrite(fname, np.array(frames))
             del frames
             frames = []
-
-    rewards_mean = np.mean(rewards_list[-100:])
+            
+        rewards_mean = np.mean(rewards_list[-100:])    
+        with writer.as_default():    
+            tf.summary.scalar('Reward/Test', reward_for_episode, test_episode)
+            tf.summary.scalar('Avg-Reward/Test', rewards_mean, test_episode)
+       
+    tf.summary.flush(writer=writer)        
     print("Average Reward: ", rewards_mean )
     print("Total tests above 200: ", high_score)
     
