@@ -237,7 +237,7 @@ class DQN:
             # Create a video from every 10th episode
             if episode % 50 == 0:
                 fname = "./tmp/videos/episode"+str(episode)+".mp4"
-                skvideo.io.vwrite(fname, np.array(frame))
+                skvideo.io.vwrite(fname, np.array(frames))
                 del frames
                 frames = []
 
