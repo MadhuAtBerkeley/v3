@@ -7,7 +7,7 @@ from Box2D.b2 import (edgeShape, circleShape, fixtureDef, polygonShape, revolute
 import gym
 from gym import spaces
 from gym.utils import seeding
-#import skvideo.io
+import skvideo.io
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from collections import deque
@@ -89,10 +89,11 @@ class DQN:
     
     def learn(self):
         cur_batch_size = min(len(self.replay_memory_buffer), self.batch_size)
-        mini_batch = random.sample(self.replay_memory_buffer, cur_batch_size)
+        #mini_batch = random.sample(self.replay_memory_buffer, cur_batch_size)
+        mini_batch = self.get_random_sample_from_replay_mem()
         
         # batch data
-        sample_states = np.ndarray(shape = (cur_batch_size, self.state_size)) # replace 128 with cur_batch_size
+        sample_states = np.ndarray(shape = (cur_batch_size, self.state_size)) 
         sample_actions = np.ndarray(shape = (cur_batch_size, 1))
         sample_rewards = np.ndarray(shape = (cur_batch_size, 1))
         sample_next_states = np.ndarray(shape = (cur_batch_size, self.state_size))
@@ -172,7 +173,9 @@ class DQN:
 
     # Get a batch_size sample of previous iterations
     def get_random_sample_from_replay_mem(self):
-        random_sample = random.sample(self.replay_memory_buffer, self.batch_size)
+        cur_batch_size = min(len(self.replay_memory_buffer), self.batch_size)
+        random_sample = random.sample(self.replay_memory_buffer, cur_batch_size)
+        #random_sample = random.sample(self.replay_memory_buffer, self.batch_size)
         return random_sample
 
     # Run the keras predict using the current state as input.
@@ -198,11 +201,13 @@ class DQN:
             state = np.reshape(state, [1, self.num_observation_space])
             while not done:
 
-                #if episode % 50 == 0:
-                #    frame = env.render(mode='rgb_array')
+                if episode % 50 == 0:
+                   frame = env.render(mode='rgb_array')
+                   fname = "/tmp/videos/episode"+str(episode)+".mp4"
+                   skvideo.io.vwrite(fname, np.array(frame))
 
                 #if episode % 50 == 0:
-                #    frames.append(frame)                    
+                #   frames.append(frame)                    
 
 
                 # use epsilon decay to choose the next state
@@ -231,11 +236,11 @@ class DQN:
             self.update_target_model()
 
             # Create a video from every 10th episode
-            if episode % 50 == 0:
-                fname = "/tmp/videos/episode"+str(episode)+".mp4"
-                #skvideo.io.vwrite(fname, np.array(frames))
-                del frames
-                frames = []
+            #if episode % 50 == 0:
+                #fname = "/tmp/videos/episode"+str(episode)+".mp4"
+                #skvideo.io.vwrite(fname, np.array(frame))
+                #del frames
+                #frames = []
 
             # Decay the epsilon after each experience completion
             if self.epsilon > self.epsilon_min:
@@ -247,7 +252,7 @@ class DQN:
             last_rewards_mean = np.mean(self.rewards_list[-100:])
 
             # Once the mean average of rewards is over 200, we can stop training
-            if last_rewards_mean > 200 and can_stop:
+            if last_rewards_mean > 250 and can_stop:
                 print("DQN Training Complete...")
                 break
             #print(episode, "\t: Episode || Reward: ",reward_for_episode, "\t|| Average Reward: ",last_rewards_mean, "\t epsilon: ", self.epsilon )
@@ -276,7 +281,7 @@ if __name__=="__main__":
     np.random.seed(21)
 
     # max number of training episodes
-    training_episodes = 2000
+    training_episodes = 1000
 
     # number of test runs with a satisfactory number of good landings
     #high_score = 0
@@ -327,4 +332,4 @@ if __name__=="__main__":
 #    print("Total tests above 200: ", high_score)
 
     #date_time = now.strftime("%Y%m%d-%H%M%S")
-    model.save('/tmp/videos/mymodel-' + date_time + '.h5')       
+    model.policy_model.save('/tmp/videos/mymodel.h5')       

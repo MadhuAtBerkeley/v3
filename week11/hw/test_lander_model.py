@@ -35,7 +35,7 @@ if __name__=="__main__":
     env = gym.make("LunarLander-v2")
     rewards_list = []
 
-    model = load_model("mymodel.h5")
+    model = load_model("final_model.h5")
     done = False
     frames = []
 

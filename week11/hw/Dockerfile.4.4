@@ -1,5 +1,6 @@
 # ARG BASE_IMAGE=nvcr.io/nvidia/jetson-voice:r32.4.2
-ARG BASE_IMAGE=nvcr.io/nvidia/l4t-ml:r32.4.3-py3
+#ARG BASE_IMAGE=nvcr.io/nvidia/l4t-ml:r32.4.3-py3
+ARG BASE_IMAGE=nvcr.io/nvidia/l4t-ml:r32.6.1-py3
 
 FROM ${BASE_IMAGE} 
 
@@ -11,16 +12,17 @@ RUN python3 setup.py build
 RUN python3 setup.py install
 RUN pip3 install scikit-video keras==2.4.1
 RUN pip3 install gym
+RUN pip3 install pyglet
 
 #WORKDIR /tmp/videos
 
 RUN mkdir /tmp/videos
 
-COPY agent_lunar_lander.py .
+#COPY agent_lunar_lander.py .
 
 # RUN mkdir /tmp/videos
 # ENV NVIDIA_VISIBLE_DEVICES 0
 # ENV CUDA_VISIBLE_DEVICES 0
 
-CMD ["python3", "agent_lunar_lander.py"]
+#CMD ["python3", "agent_lunar_lander.py"]
 

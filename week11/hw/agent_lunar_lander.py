@@ -28,8 +28,8 @@ class DQN:
 
         #######################
         # Change these parameters to improve performance
-        self.density_first_layer = 16
-        self.density_second_layer = 8
+        self.density_first_layer = 128
+        self.density_second_layer = 128
         self.num_epochs = 1
         self.batch_size = 64
         self.epsilon_min = 0.01
@@ -41,7 +41,7 @@ class DQN:
         self.gamma = 0.99
 
         # Learning rate
-        self.lr = 0.001
+        self.lr = 0.0001
 
         #######################
 
@@ -185,11 +185,11 @@ class DQN:
             self.rewards_list.append(reward_for_episode)
 
             # Create a video from every 10th episode
-            if episode % 50 == 0:
-                fname = "/tmp/videos/episode"+str(episode)+".mp4"
-                skvideo.io.vwrite(fname, np.array(frames))
-                del frames
-                frames = []
+            #if episode % 50 == 0:
+                #fname = "/tmp/videos/episode"+str(episode)+".mp4"
+                #skvideo.io.vwrite(fname, np.array(frames))
+                #del frames
+                #frames = []
 
             # Decay the epsilon after each experience completion
             if self.epsilon > self.epsilon_min:
@@ -278,7 +278,7 @@ if __name__=="__main__":
 #    print("Average Reward: ", rewards_mean )
 #    print("Total tests above 200: ", high_score)
 
-    date_time = now.strftime("%Y%m%d-%H%M%S")
+    #date_time = now.strftime("%Y%m%d-%H%M%S")
     model.save('/tmp/videos/mymodel-' + date_time + '.h5')
 
     
