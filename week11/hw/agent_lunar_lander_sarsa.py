@@ -33,7 +33,7 @@ class DQN:
         self.density_second_layer = 128
         self.num_epochs = 1
         self.batch_size = 64
-        self.epsilon_min = 0.1
+        self.epsilon_min = 0.02
 
         # epsilon will randomly choose the next action as either
         # a random action, or the highest scoring predicted action
