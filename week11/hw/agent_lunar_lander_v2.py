@@ -88,79 +88,42 @@ class DQN:
         self.target_model.set_weights(self.policy_model.get_weights())
         return self.target_model
     
-    def learn(self):
+    def learn_and_update_weights_by_reply(self):
         cur_batch_size = min(len(self.replay_memory_buffer), self.batch_size)
-        #mini_batch = random.sample(self.replay_memory_buffer, cur_batch_size)
         mini_batch = self.get_random_sample_from_replay_mem()
         
         # batch data
-        sample_states = np.ndarray(shape = (cur_batch_size, self.state_size)) 
-        sample_actions = np.ndarray(shape = (cur_batch_size, 1))
-        sample_rewards = np.ndarray(shape = (cur_batch_size, 1))
-        sample_next_states = np.ndarray(shape = (cur_batch_size, self.state_size))
-        sample_dones = np.ndarray(shape = (cur_batch_size, 1))
+        states = np.ndarray(shape = (cur_batch_size, self.state_size)) 
+        actions = np.ndarray(shape = (cur_batch_size, 1))
+        rewards = np.ndarray(shape = (cur_batch_size, 1))
+        next_states = np.ndarray(shape = (cur_batch_size, self.state_size))
+        dones = np.ndarray(shape = (cur_batch_size, 1))
 
         temp=0
         for exp in mini_batch:
-            sample_states[temp] = exp[0]
-            sample_actions[temp] = exp[1]
-            sample_rewards[temp] = exp[2]
-            sample_next_states[temp] = exp[3]
-            sample_dones[temp] = exp[4]
+            states[temp] = exp[0]
+            actions[temp] = exp[1]
+            rewards[temp] = exp[2]
+            next_states[temp] = exp[3]
+            dones[temp] = exp[4]
             temp += 1
         
          
-        sample_qhat_next = self.target_model.predict(sample_next_states)
+        qhat_next = self.target_model.predict(next_states)
         
         # set all Q values terminal states to 0
-        sample_qhat_next = sample_qhat_next * (np.ones(shape = sample_dones.shape) - sample_dones)
+        qhat_next = qhat_next * (np.ones(shape = dones.shape) - dones)
         # choose max action for each state
-        sample_qhat_next = np.max(sample_qhat_next, axis=1)
+        qhat_next = np.max(qhat_next, axis=1)
         
-        sample_qhat = self.policy_model.predict(sample_states)
+        qhat = self.policy_model.predict(states)
         
         for i in range(cur_batch_size):
             a = sample_actions[i,0]
-            sample_qhat[i,int(a)] = sample_rewards[i] + self.gamma * sample_qhat_next[i]
+            qhat[i,int(a)] = rewards[i] + self.gamma * qhat_next[i]
             
-        q_target = sample_qhat
-            
-        self.policy_model.fit(sample_states, q_target, epochs = 1, verbose = 0)
+        self.policy_model.fit(states, q_hat, epochs=self.num_epochs, verbose = 0)
     
-    def learn_and_update_weights_by_reply(self):
-
-        # replay_memory_buffer size check
-        # if we have fewer than 64 actions in the buffer, 
-        # or the counter is not 0, return
-        if len(self.replay_memory_buffer) < self.batch_size or self.counter != 0:
-            return
-
-        # Early Stopping
-        if np.mean(self.rewards_list[-10:]) > 180:
-            return
-
-        # Choose batch of random samples from the replay stack 
-        random_sample = self.get_random_sample_from_replay_mem()
-
-        # Get the values (in numpy array form) from the random batch of samples
-        states, actions, rewards, next_states, done_list = self.get_attribues_from_sample(random_sample)
-
-        # Use the Keras "predict_on_batch" feature to predict the targets
-        # based on the random batch of next states in our replay stack
-        targets = rewards + self.gamma * (np.amax(self.policy_model.predict_on_batch(next_states), axis=1)) * (1 - done_list)
-        
-        # Run a prediction on the states in our random sample
-        target_vec = self.target_model.predict_on_batch(states)
-
-        # Create a numpy array sized to match the batch_size
-        indexes = np.array([i for i in range(self.batch_size)])
-
-        # The target vector is an array of 
-        # state predictions 
-        target_vec[[indexes], [actions]] = targets
-
-        # build a model with the existing states and target scores in batches of 64
-        self.policy_model.fit(states, target_vec, epochs=self.num_epochs, verbose=0)
 
     def get_attribues_from_sample(self, random_sample):
         states = np.array([i[0] for i in random_sample])
@@ -176,7 +139,6 @@ class DQN:
     def get_random_sample_from_replay_mem(self):
         cur_batch_size = min(len(self.replay_memory_buffer), self.batch_size)
         random_sample = random.sample(self.replay_memory_buffer, cur_batch_size)
-        #random_sample = random.sample(self.replay_memory_buffer, self.batch_size)
         return random_sample
 
     # Run the keras predict using the current state as input.
@@ -225,8 +187,7 @@ class DQN:
                 self.update_counter()
 
                 # update the model
-                #self.learn_and_update_weights_by_reply()
-                self.learn()
+                self.learn_and_update_weights_by_reply()
 
                 #if done:
                 #    break
