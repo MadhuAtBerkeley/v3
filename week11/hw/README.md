@@ -20,8 +20,8 @@ The config of deep neural network is given below
 
 # Results 
 ## Logs
- * Train logs : train_logs.txt
- * Test logs : test_logs.txt
+ * Train logs : https://github.com/MadhuAtBerkeley/v3/blob/main/week11/hw/train_logs.txt
+ * Test logs : https://github.com/MadhuAtBerkeley/v3/blob/main/week11/hw/test_logs.txt
  * test log output is as below
 
 
