@@ -4,6 +4,7 @@
 # Assignment
 In this homework, you will be training a Lunar Lander module to land properly **using your Xavier NX**. There is a video component to this file, so use a display or VNC.
 
+## DQN Model 
 The config of deep neural network is given below
 
 
@@ -17,26 +18,37 @@ The config of deep neural network is given below
 
 
 
+# Results 
+## Logs
+ * Train logs : In the file
+ * Test logs : In the file
+ * test log output is as below
 
-The output looks like this:
 
 ```
 DQN Training Complete...
-Starting Testing of the trained model...
-0       : Episode || Reward:  219.64614710147364
-1       : Episode || Reward:  204.5401595978414
-2       : Episode || Reward:  191.82778586724473
-3       : Episode || Reward:  300.26513457499857
-4       : Episode || Reward:  265.38375246986914
-5       : Episode || Reward:  231.17971859331598
-6       : Episode || Reward:  158.1286447553571
+
 .
 .
 .
 Average Reward:  243.09916996497867
 ```
 
+## Videos
 
+* First episode : https://w251-s3-bucket.s3.us-west-2.amazonaws.com/HW11_videos/episode0.mp4
+* Intermediate : https://w251-s3-bucket.s3.us-west-2.amazonaws.com/HW11_videos/episode50.mp4
+* Best : https://w251-s3-bucket.s3.us-west-2.amazonaws.com/HW11_videos/episode500.mp4
+* Last : https://w251-s3-bucket.s3.us-west-2.amazonaws.com/HW11_videos/episode550.mp4
+* Test0 : https://w251-s3-bucket.s3.us-west-2.amazonaws.com/HW11_videos/testing_run0.mp4
+* Test1: https://w251-s3-bucket.s3.us-west-2.amazonaws.com/HW11_videos/testing_run50.mp4
+
+## Tensorboard Plots
+
+* DQN plots : https://tensorboard.dev/experiment/uD868PK7QeynmPWyomD8tQ/#scalars
+* SARA Plots : https://tensorboard.dev/experiment/zdznv1lUQxWqqx0jP7x8pA/#scalars
+
+# Questions
 Submit a write-up of the tweaks you made to the model and the effect they had on the results. 
 Questions to answer:
 1) What parameters did you change, and what values did you use? 
@@ -50,7 +62,7 @@ Ans:  I tried changing following parameters
 
 Ans: I found vanilla DQN took more time for converegnce.  Hence, I modified the code to implement 
  *  Double DQN : Used separate Deep networks for target and policy estimation.
- *  SARSA : SARSA worked better than Q Training (not always the case).  SARSA is an on-policy training and Q training is off-policy
+ *  SARSA : I tried SARSA as well but Q learning performed better than SARSA.  SARSA is an on-policy training and Q training is off-policy
  *  The epsilon_decay is used to change epsilon value and I did not change initial epsilon value or default epsilon decay
 
 
