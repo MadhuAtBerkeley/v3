@@ -20,18 +20,29 @@ The config of deep neural network is given below
 
 # Results 
 ## Logs
- * Train logs : In the file
- * Test logs : In the file
+ * Train logs : train_logs.txt
+ * Test logs : test_logs.txt
  * test log output is as below
 
 
 ```
-DQN Training Complete...
+Starting Testing of the trained model...
+0 	: Episode || Reward:  260.25578205228226
+1 	: Episode || Reward:  230.87351066754917
+2 	: Episode || Reward:  232.68349912409127
+3 	: Episode || Reward:  245.22030161360016
+4 	: Episode || Reward:  237.45961219894332
+:
+:
+94 	: Episode || Reward:  261.5499464644016
+95 	: Episode || Reward:  221.01016449949873
+96 	: Episode || Reward:  237.4993326341263
+97 	: Episode || Reward:  260.46031719930204
+98 	: Episode || Reward:  215.4469397722495
+99 	: Episode || Reward:  181.51052852781734
+Average Reward:  232.08962496067844
+Total tests above 200:  89
 
-.
-.
-.
-Average Reward:  243.09916996497867
 ```
 
 ## Videos
@@ -72,7 +83,7 @@ Ans: Increasing epsilon_decay value higher than 0.9999 would increase exploratio
 
 Increasing learning rate higher than 0.001 resulted in aggressive learning with Q estimates with high bias and reduced the performance.
 
-I got 76 out of 100 test episodes above 200
+I got 89 out of 100 test episodes above 200
 
 4) Based on what you observed, what conclusions can you draw about the different parameters and their values? 
 
